@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="MediTrack — Clinic Inventory Management System" />
+  <title>MediTrack | Admin Dashboard</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        crossorigin="anonymous" />
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+        rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../../assets/css/main.css">
+</head>
+
+<body>
+
+<!-- ============================================================
+     MOBILE OVERLAY
+     ============================================================ -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+
+<!-- ============================================================
+     APP WRAPPER
+     ============================================================ -->
+<div class="app">
+
+  <!-- ==========================================================
+       SIDEBAR
+       ========================================================== -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Navigation">
+
+    <!-- Brand / Logo -->
+    <div class="sidebar-brand">
+      <div class="brand-logo-wrap" title="MediTrack">
+        <img src="../assets/logo.png"
+             alt="MediTrack Logo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <span class="brand-logo-icon" style="display:none;">
+          <i class="bi bi-heart-pulse-fill"></i>
+        </span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">MediTrack</span>
+        <span class="brand-tagline">Clinic Inventory</span>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+
+      <span class="nav-section-label">Main Menu</span>
+
+      <ul>
+        <li class="nav-item">
+          <a href="#" class="nav-link active" aria-current="page">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="bi bi-capsule-pill nav-icon"></i>
+            <span class="nav-label">Medicines</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="bi bi-arrow-left-right nav-icon"></i>
+            <span class="nav-label">Transactions</span>
+            <span class="nav-badge" id="navBadgeTransactions" style="display:none;"></span>
+          </a>
+        </li>
+      </ul>
+
+      <span class="nav-section-label" style="margin-top:8px;">Management</span>
+
+      <ul>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="bi bi-bar-chart-line-fill nav-icon"></i>
+            <span class="nav-label">Reports</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="bi bi-people-fill nav-icon"></i>
+            <span class="nav-label">Users</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link">
+            <i class="bi bi-gear-fill nav-icon"></i>
+            <span class="nav-label">Settings</span>
+          </a>
+        </li>
+      </ul>
+
+    </nav>
+
+    <!-- Footer: User Info + Logout -->
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatarInitial" aria-hidden="true"></div>
+        <div class="sidebar-user-info">
+          <strong id="sidebarUserName"></strong>
+          <small id="sidebarUserRole"></small>
+        </div>
+      </div>
+      <button class="btn-sidebar-logout" id="btnLogout" aria-label="Logout">
+        <i class="bi bi-box-arrow-right nav-icon"></i>
+        <span class="nav-label">Logout</span>
+      </button>
+    </div>
+
+  </aside>
+  <!-- /sidebar -->
+
+
+  <!-- ==========================================================
+       TOP NAVBAR
+       ========================================================== -->
+  <header class="top-navbar" id="topNavbar" role="banner">
+
+    <div class="navbar-left">
+      <!-- Hamburger (mobile only) -->
+      <button class="btn-menu-toggle"
+              id="menuToggle"
+              aria-label="Toggle Sidebar"
+              aria-expanded="false"
+              aria-controls="sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <!-- Page title / breadcrumb -->
+      <div class="navbar-page-info">
+        <div class="page-title">Dashboard</div>
+        <div class="page-crumb">
+          <i class="bi bi-house-fill" style="font-size:.68rem;"></i>
+          &nbsp;Home &rsaquo; Dashboard
+        </div>
+      </div>
+    </div>
+
+    <div class="navbar-right">
+      <!-- Search Bar -->
+      <div class="nav-search" role="search">
+        <i class="bi bi-search"></i>
+        <input type="search"
+               id="navSearchInput"
+               placeholder="Search medicines…"
+               aria-label="Search medicines" />
+      </div>
+
+      <!-- Notifications -->
+      <button class="btn-icon-nav keep" id="btnNotifications" aria-label="Notifications">
+        <i class="bi bi-bell-fill"></i>
+        <span class="notif-badge" id="notifBadge" aria-hidden="true" style="display:none;"></span>
+      </button>
+
+      <!-- Calendar -->
+      <button class="btn-icon-nav" id="btnCalendar" aria-label="Calendar">
+        <i class="bi bi-calendar3"></i>
+      </button>
+
+      <!-- Help -->
+      <button class="btn-icon-nav" id="btnHelp" aria-label="Help">
+        <i class="bi bi-question-circle"></i>
+      </button>
+
+      <!-- User Profile Block -->
+      <div class="navbar-user"
+           id="navbarUser"
+           role="button"
+           tabindex="0"
+           aria-label="User Profile">
+        <div class="user-avatar-nav" id="navAvatarInitial" aria-hidden="true"></div>
+        <div class="user-text">
+          <span class="user-name-nav" id="navUserName"></span>
+          <span class="user-role-nav" id="navUserRole"></span>
+        </div>
+        <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
+      </div>
+    </div>
+
+  </header>
+  <!-- /top-navbar -->
+
+
+  <!-- ==========================================================
+       MAIN CONTENT
+       ========================================================== -->
+  <main class="main-content" id="mainContent" role="main">
+
+
+    <!-- ── Welcome Banner ──────────────────────────────────── -->
+    <div class="welcome-banner au d1" role="region" aria-label="Welcome">
+      <div class="welcome-text">
+        <h1 id="welcomeHeading">Welcome back&nbsp;👋</h1>
+        <p>Manage your clinic inventory efficiently and keep track of medicine stock in real time.</p>
+        <div class="welcome-tags">
+          <span class="wtag wtag-glass">
+            <i class="bi bi-calendar3"></i>
+            <span id="todayDate">—</span>
+          </span>
+          <span class="wtag wtag-yellow">
+            <i class="bi bi-check-circle-fill"></i>
+            System Online
+          </span>
+        </div>
+      </div>
+      <div class="welcome-icon-box" aria-hidden="true">
+        <i class="bi bi-heart-pulse-fill"></i>
+      </div>
+    </div>
+
+
+    <!-- ── Stat Cards ───────────────────────────────────────── -->
+    <div class="section-row au d2">
+      <div>
+        <div class="sec-title">Inventory Overview</div>
+        <div class="sec-sub">Live summary of your clinic stock</div>
+      </div>
+      <a href="#" class="btn-see-all">
+        View All&nbsp;<i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="stats-grid" role="list" aria-label="Summary Statistics">
+
+      <!-- Total Medicines -->
+      <div class="stat-card sc-green au d3"
+           id="cardTotalMedicines"
+           role="listitem"
+           tabindex="0"
+           aria-label="Total Medicines">
+        <div class="stat-header">
+          <div class="stat-icon"><i class="bi bi-capsule-pill"></i></div>
+          <span class="stat-chip">All Items</span>
+        </div>
+        <div class="stat-value" id="statTotalMedicines">—</div>
+        <div class="stat-label">Total Medicines</div>
+        <div class="stat-trend trend-up" id="trendTotalMedicines"></div>
+      </div>
+
+      <!-- Low Stock -->
+      <div class="stat-card sc-red au d4"
+           id="cardLowStock"
+           role="listitem"
+           tabindex="0"
+           aria-label="Low Stock Items">
+        <div class="stat-header">
+          <div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+          <span class="stat-chip">Critical</span>
+        </div>
+        <div class="stat-value" id="statLowStock">—</div>
+        <div class="stat-label">Low Stock Items</div>
+        <div class="stat-trend trend-down" id="trendLowStock"></div>
+      </div>
+
+      <!-- Expiring Soon -->
+      <div class="stat-card sc-yellow au d5"
+           id="cardExpiringSoon"
+           role="listitem"
+           tabindex="0"
+           aria-label="Expiring Soon">
+        <div class="stat-header">
+          <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+          <span class="stat-chip">30 Days</span>
+        </div>
+        <div class="stat-value" id="statExpiringSoon">—</div>
+        <div class="stat-label">Expiring Soon</div>
+        <div class="stat-trend trend-flat" id="trendExpiringSoon"></div>
+      </div>
+
+      <!-- Total Transactions -->
+      <div class="stat-card sc-blue au d6"
+           id="cardTotalTransactions"
+           role="listitem"
+           tabindex="0"
+           aria-label="Total Transactions">
+        <div class="stat-header">
+          <div class="stat-icon"><i class="bi bi-receipt-cutoff"></i></div>
+          <span class="stat-chip">This Month</span>
+        </div>
+        <div class="stat-value" id="statTotalTransactions">—</div>
+        <div class="stat-label">Total Transactions</div>
+        <div class="stat-trend trend-up" id="trendTotalTransactions"></div>
+      </div>
+
+    </div>
+    <!-- /stats-grid -->
+
+
+    <!-- ── Quick Actions ────────────────────────────────────── -->
+    <div class="section-row au d6">
+      <div>
+        <div class="sec-title">Quick Actions</div>
+        <div class="sec-sub">Common tasks — one click away</div>
+      </div>
+    </div>
+
+    <div class="quick-actions-grid au d7" role="toolbar" aria-label="Quick Actions">
+      <button class="qa-btn" id="btnAddMedicine" aria-label="Add Medicine">
+        <i class="bi bi-plus-circle-fill" style="color:var(--maroon);"></i>
+        Add Medicine
+      </button>
+      <button class="qa-btn" id="btnDispense" aria-label="Dispense Medicine">
+        <i class="bi bi-box-arrow-right" style="color:var(--blue);"></i>
+        Dispense
+      </button>
+      <button class="qa-btn" id="btnRestock" aria-label="Restock Medicine">
+        <i class="bi bi-arrow-repeat" style="color:var(--green);"></i>
+        Restock
+      </button>
+      <button class="qa-btn" id="btnGenerateReport" aria-label="Generate Report">
+        <i class="bi bi-file-earmark-bar-graph-fill" style="color:var(--yellow-dark);"></i>
+        Generate Report
+      </button>
+    </div>
+
+
+    <!-- ── Charts Row ────────────────────────────────────────── -->
+    <div class="charts-row au d7">
+
+      <!-- Bar Chart — Medicine Usage -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div>
+            <h3>Medicine Usage Trend</h3>
+            <p id="usageChartSubtitle">Dispensed vs Restocked</p>
+          </div>
+          <div class="chart-legend">
+            <span class="leg-item">
+              <span class="leg-dot" style="background:#7B1D1E;"></span>Dispensed
+            </span>
+            <span class="leg-item">
+              <span class="leg-dot" style="background:#F6AC02;"></span>Restocked
+            </span>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:260px;">
+          <canvas id="usageChart" role="img" aria-label="Medicine Usage Bar Chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Donut Chart — Stock Breakdown -->
+      <div class="card-panel">
+        <div class="panel-header">
+          <div>
+            <h3>Stock Status</h3>
+            <p>Current inventory breakdown</p>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:180px;">
+          <canvas id="stockDonut" role="img" aria-label="Stock Status Donut Chart"></canvas>
+        </div>
+        <div class="donut-list" id="donutList" role="list" aria-label="Stock Status Breakdown">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </div>
+    <!-- /charts-row -->
+
+
+    <!-- ── Bottom Row ─────────────────────────────────────────── -->
+    <div class="bottom-row au d8">
+
+      <!-- Recent Transactions Table -->
+      <div class="card-panel">
+        <div class="tbl-header">
+          <h3><i class="bi bi-clock-history" style="color:var(--maroon);margin-right:7px;"></i>Recent Transactions</h3>
+          <a href="#" class="btn-see-all" id="btnViewAllTransactions">View All <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="table-responsive">
+          <table class="medi-table" aria-label="Recent Transactions Table">
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Date</th>
+                <th>Qty</th>
+                <th>Status</th>
+                <th>Staff</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Low Stock Alert Panel -->
+      <div class="card-panel">
+        <div class="alert-panel-title">
+          <i class="bi bi-exclamation-circle-fill"></i>
+          Low Stock Alerts
+        </div>
+        <div id="alertList" role="list" aria-label="Low Stock Alerts">
+          <!-- Populated by JS -->
+        </div>
+        <button class="btn-reorder" id="btnRequestReorder" aria-label="Request Reorder for all low stock items">
+          <i class="bi bi-truck"></i>
+          Request Reorder
+        </button>
+      </div>
+
+    </div>
+    <!-- /bottom-row -->
+
+
+  </main>
+  <!-- /main-content -->
+
+</div>
+<!-- /app wrapper -->
+
+
+<!-- Toast Container -->
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+
+
+<!-- ============================================================
+     DASHBOARD SCRIPT
+     ============================================================ -->
+<script>
+  /* ── All functions and data calls will go here ── */
+</script>
+
+</body>
+</html>

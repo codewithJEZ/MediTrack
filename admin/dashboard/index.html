@@ -147,9 +147,6 @@
               aria-controls="sidebar">
         <i class="bi bi-list"></i>
       </button>
-      <button class="menu-toggle">
-        ☰
-      </button>
 
       <!-- Page title / breadcrumb -->
       <div class="navbar-page-info">
@@ -449,7 +446,27 @@
      DASHBOARD SCRIPT
      ============================================================ -->
 <script>
-  /* ── All functions and data calls will go here ── */
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+document.getElementById('menuToggle').addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('show');
+});
+overlay.addEventListener('click', () => {
+  sidebar.classList.remove('open');
+  overlay.classList.remove('show');
+});
+document.getElementById('btnLogout').addEventListener('click', () => {
+  localStorage.removeItem('admin');
+  window.location.href = '../../index.html';
+});
+const storedUser = localStorage.getItem('admin') || 'Admin User';
+document.getElementById('sidebarUserName').textContent = storedUser;
+document.getElementById('sidebarAvatarInitial').textContent = storedUser.charAt(0).toUpperCase();
+document.getElementById('navUserName').textContent = storedUser;
+document.getElementById('navAvatarInitial').textContent = storedUser.slice(0,2).toUpperCase();
+document.getElementById('welcomeHeading').textContent = `Welcome back, ${storedUser} 👋`;
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 </script>
 
 </body>

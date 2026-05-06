@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user || user.role !== 'admin') window.location.href = '../../index.html';</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediTrack | Users</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../main.css" />
+  <style>
+    .page-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 14px; flex-wrap: wrap; margin-bottom: 22px;
+    }
+    .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    .page-search {
+      position: relative; display: flex; align-items: center;
+    }
+    .page-search input {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px 10px 38px;
+      font-size: .88rem;
+      font-family: 'Nunito', sans-serif;
+      color: var(--text-1);
+      width: 230px; outline: none;
+      transition: var(--transition);
+    }
+    .page-search input:focus {
+      border-color: var(--maroon);
+      box-shadow: 0 0 0 3px var(--maroon-glow);
+      width: 270px;
+    }
+    .page-search .bi { position: absolute; left: 12px; color: var(--text-3); font-size: .9rem; pointer-events: none; }
+
+    .filter-select {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: .88rem;
+      font-family: 'Nunito', sans-serif;
+      color: var(--text-2);
+      outline: none; cursor: pointer;
+      transition: var(--transition);
+    }
+    .filter-select:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
+
+    .btn-primary-mt {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%);
+      color: var(--white); border-radius: 10px;
+      font-size: .9rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      box-shadow: 0 4px 14px rgba(123,29,30,.28);
+      transition: var(--transition); white-space: nowrap;
+    }
+    .btn-primary-mt:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(123,29,30,.36); color: var(--white); }
+
+    /* User avatar in table */
+    .user-cell { display: flex; align-items: center; gap: 12px; }
+    .user-tbl-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 800;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      flex-shrink: 0;
+      color: var(--white);
+    }
+    .user-tbl-name  { font-size: .88rem; font-weight: 700; color: var(--text-1); }
+    .user-tbl-email { font-size: .76rem; color: var(--text-3); }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    .role-admin  { background: rgba(123,29,30,.1);  color: var(--maroon); }
+    .role-nurse  { background: var(--blue-bg);       color: var(--blue); }
+    .role-staff  { background: var(--green-bg);      color: var(--green); }
+    .role-viewer { background: var(--orange-bg);     color: var(--orange); }
+
+    /* Status */
+    .status-active   { background: var(--green-bg); color: var(--green); }
+    .status-inactive { background: var(--border-light); color: var(--text-3); }
+
+    /* Action buttons */
+    .btn-tbl {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 8px;
+      font-size: .78rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      transition: var(--transition); cursor: pointer; border: none;
+    }
+    .btn-edit { background: var(--bg); color: var(--text-2); border: 1.5px solid var(--border); }
+    .btn-edit:hover { background: var(--border-light); color: var(--maroon); border-color: var(--maroon); }
+    .btn-del  { background: var(--red-bg); color: var(--red); }
+    .btn-del:hover  { background: var(--red); color: var(--white); }
+
+    /* User summary strip */
+    .user-summary {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 22px;
+    }
+    .usr-sum-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .usr-sum-icon {
+      width: 44px; height: 44px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .usr-sum-val {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.55rem; font-weight: 800; color: var(--text-1); line-height: 1;
+    }
+    .usr-sum-lbl { font-size: .78rem; font-weight: 600; color: var(--text-3); margin-top: 3px; }
+
+    /* Modal */
+    .mt-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,10,20,.55);
+      backdrop-filter: blur(4px); z-index: 2000;
+      align-items: center; justify-content: center;
+    }
+    .mt-modal-overlay.show { display: flex; }
+    .mt-modal {
+      background: var(--surface); border-radius: var(--radius);
+      padding: 32px 28px; width: 100%; max-width: 440px; margin: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: fadeUp .32s cubic-bezier(.34,1.2,.64,1);
+    }
+    .mt-modal h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text-1); margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: .82rem; font-weight: 700; color: var(--text-2); margin-bottom: 5px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: .9rem;
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg); color: var(--text-1);
+      outline: none; transition: var(--transition);
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--maroon); background: var(--white); box-shadow: 0 0 0 3px var(--maroon-glow); }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-modal-cancel {
+      flex: 1; padding: 12px; background: var(--bg); color: var(--text-2);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: .9rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: var(--transition);
+    }
+    .btn-modal-cancel:hover { background: var(--border-light); }
+    .btn-modal-confirm {
+      flex: 1; padding: 12px;
+      background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
+      color: var(--white); border: none; border-radius: 10px;
+      font-size: .9rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(123,29,30,.25);
+    }
+    .btn-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(123,29,30,.35); }
+
+    @media (max-width: 768px) {
+      .user-summary { grid-template-columns: 1fr 1fr; }
+      .page-toolbar { flex-direction: column; align-items: stretch; }
+      .medi-table th:nth-child(5),
+      .medi-table td:nth-child(5) { display: none; }
+    }
+    @media (max-width: 480px) {
+      .user-summary { grid-template-columns: 1fr; }
+      .medi-table th:nth-child(3),
+      .medi-table td:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo-wrap">
+        <img src="../../assets/logo.png" alt="MediTrack Logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+        <span class="brand-logo-icon" style="display:none;"><i class="bi bi-heart-pulse-fill"></i></span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">MediTrack</span>
+        <span class="brand-tagline">Clinic Inventory</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main Menu</span>
+      <ul>
+        <li class="nav-item"><a href="../dashboard/index.html" class="nav-link"><i class="bi bi-grid-fill nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
+        <li class="nav-item"><a href="../medicines/medicines.html" class="nav-link"><i class="bi bi-capsule-pill nav-icon"></i><span class="nav-label">Medicines</span></a></li>
+        <li class="nav-item"><a href="../transactions/transactions.html" class="nav-link"><i class="bi bi-arrow-left-right nav-icon"></i><span class="nav-label">Transactions</span></a></li>
+      </ul>
+      <span class="nav-section-label" style="margin-top:8px;">Management</span>
+      <ul>
+        <li class="nav-item"><a href="../reports/reports.html" class="nav-link"><i class="bi bi-bar-chart-line-fill nav-icon"></i><span class="nav-label">Reports</span></a></li>
+        <li class="nav-item"><a href="../users/users.html" class="nav-link active" aria-current="page"><i class="bi bi-people-fill nav-icon"></i><span class="nav-label">Users</span></a></li>
+        <li class="nav-item"><a href="../settings/settings.html" class="nav-link"><i class="bi bi-gear-fill nav-icon"></i><span class="nav-label">Settings</span></a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">A</div>
+        <div class="sidebar-user-info">
+          <strong>Admin User</strong>
+          <small>System Administrator</small>
+        </div>
+      </div>
+      <button class="btn-sidebar-logout" id="btnLogout">
+        <i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- NAVBAR -->
+  <header class="top-navbar" id="topNavbar">
+    <div class="navbar-left">
+      <button class="btn-menu-toggle" id="menuToggle" aria-label="Toggle Sidebar"><i class="bi bi-list"></i></button>
+      <div class="navbar-page-info">
+        <div class="page-title">Users</div>
+        <div class="page-crumb"><i class="bi bi-house-fill" style="font-size:.68rem;"></i>&nbsp;Home &rsaquo; Users</div>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <div class="nav-search" role="search">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Search medicines…" />
+      </div>
+      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
+      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
+      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
+      <div class="navbar-user" tabindex="0">
+        <div class="user-avatar-nav">AD</div>
+        <div class="user-text">
+          <span class="user-name-nav">Admin User</span>
+          <span class="user-role-nav">Administrator</span>
+        </div>
+        <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Summary Strip -->
+    <div class="user-summary au d1">
+      <div class="usr-sum-card">
+        <div class="usr-sum-icon" style="background:rgba(123,29,30,.1);color:var(--maroon);"><i class="bi bi-people-fill"></i></div>
+        <div>
+          <div class="usr-sum-val" id="sumAllUsers">0</div>
+          <div class="usr-sum-lbl">Total Users</div>
+        </div>
+      </div>
+      <div class="usr-sum-card">
+        <div class="usr-sum-icon" style="background:var(--green-bg);color:var(--green);"><i class="bi bi-person-check-fill"></i></div>
+        <div>
+          <div class="usr-sum-val" id="sumActiveUsers">0</div>
+          <div class="usr-sum-lbl">Active Users</div>
+        </div>
+      </div>
+      <div class="usr-sum-card">
+        <div class="usr-sum-icon" style="background:var(--blue-bg);color:var(--blue);"><i class="bi bi-shield-fill-check"></i></div>
+        <div>
+          <div class="usr-sum-val" id="sumAdmins">0</div>
+          <div class="usr-sum-lbl">Administrators</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="page-toolbar au d2">
+      <div class="toolbar-left">
+        <div class="page-search">
+          <i class="bi bi-search"></i>
+          <input type="search" id="searchInput" placeholder="Search by name or email…" />
+        </div>
+        <select class="filter-select" id="roleFilter">
+          <option value="">All Roles</option>
+          <option value="Administrator">Administrator</option>
+          <option value="Nurse">Nurse</option>
+          <option value="Staff">Staff</option>
+          <option value="Viewer">Viewer</option>
+        </select>
+        <select class="filter-select" id="statusFilter">
+          <option value="">All Status</option>
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn-primary-mt" id="btnAddUser">
+          <i class="bi bi-person-plus-fill"></i> Add User
+        </button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card-panel au d3">
+      <div class="tbl-header" style="margin-bottom:18px;">
+        <h3><i class="bi bi-people-fill" style="color:var(--maroon);margin-right:8px;"></i>System Users</h3>
+        <span id="userCount" style="font-size:.8rem;color:var(--text-3);font-weight:600;"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="medi-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Active</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="mt-modal-overlay" id="addUserModal">
+  <div class="mt-modal">
+    <h2><i class="bi bi-person-plus-fill" style="color:var(--maroon);margin-right:8px;"></i>Add New User</h2>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="newUserName" placeholder="e.g. Nurse Juan Dela Cruz" />
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="newUserEmail" placeholder="e.g. juan@clinic.ph" />
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="newUserRole">
+        <option value="">Select role…</option>
+        <option value="Administrator">Administrator</option>
+        <option value="Nurse">Nurse</option>
+        <option value="Staff">Staff</option>
+        <option value="Viewer">Viewer</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Status</label>
+      <select id="newUserStatus">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-modal-confirm" onclick="saveUser()"><i class="bi bi-check-lg"></i> Save User</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-stack" id="toastStack"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script>
+const API = 'http://localhost:3000/api';
+const AVATAR_COLORS = ['#7B1D1E','#2563eb','#16a34a','#ea580c','#7c3aed','#0891b2'];
+let USERS = [];
+
+function getInitials(name) {
+  return name.split(' ').filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
+}
+function getAvatarColor(id) { return AVATAR_COLORS[(id - 1) % AVATAR_COLORS.length]; }
+
+function renderUsers(data) {
+  const tbody = document.getElementById('usersBody');
+  document.getElementById('userCount').textContent = `${data.length} user${data.length !== 1 ? 's' : ''} found`;
+  document.getElementById('sumAllUsers').textContent    = USERS.length;
+  document.getElementById('sumActiveUsers').textContent = USERS.length;
+  document.getElementById('sumAdmins').textContent      = USERS.filter(u => u.role === 'admin').length;
+
+  tbody.innerHTML = data.map(u => {
+    const roleLabel = u.role.charAt(0).toUpperCase() + u.role.slice(1);
+    const roleClass = u.role === 'admin' ? 'role-admin' : 'role-staff';
+    const lastDt = new Date(u.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+    return `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="user-tbl-avatar" style="background:${getAvatarColor(u.id)};">${getInitials(u.name)}</div>
+            <div>
+              <div class="user-tbl-name">${u.name}</div>
+              <div class="user-tbl-email">${u.username}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="role-badge ${roleClass}">${roleLabel}</span></td>
+        <td><span class="pill status-active">Active</span></td>
+        <td class="td-date">${lastDt}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-tbl btn-edit" onclick="editUser(${u.id})"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="btn-tbl btn-del" onclick="deleteUser(${u.id})"><i class="bi bi-trash"></i></button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function applyFilters() {
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const role = document.getElementById('roleFilter').value.toLowerCase();
+  const data = USERS.filter(u =>
+    (!q    || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)) &&
+    (!role || u.role === role)
+  );
+  renderUsers(data);
+}
+
+document.getElementById('searchInput').addEventListener('input', applyFilters);
+document.getElementById('roleFilter').addEventListener('change', applyFilters);
+document.getElementById('statusFilter').addEventListener('change', applyFilters);
+
+document.getElementById('btnAddUser').addEventListener('click', () => {
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserEmail').value = '';
+  document.getElementById('newUserRole').value = '';
+  document.getElementById('newUserStatus').value = 'Active';
+  document.getElementById('addUserModal').classList.add('show');
+});
+function closeAddModal() { document.getElementById('addUserModal').classList.remove('show'); }
+
+async function saveUser() {
+  const name     = document.getElementById('newUserName').value.trim();
+  const username = document.getElementById('newUserEmail').value.trim();
+  const role     = document.getElementById('newUserRole').value;
+  if (!name || !username || !role) { showToast('Incomplete Form', 'Please fill in all required fields.', 'e'); return; }
+  const res = await fetch(`${API}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, username, password: 'changeme', role: role.toLowerCase() })
+  });
+  if (res.ok) {
+    closeAddModal();
+    showToast('User Added', `${name} has been added successfully.`, 's');
+    loadUsers();
+  } else {
+    showToast('Error', 'Failed to add user.', 'e');
+  }
+}
+
+function editUser(id) {
+  const u = USERS.find(x => x.id === id);
+  showToast('Edit User', `Editing "${u.name}" — form coming soon.`, 'w');
+}
+
+async function deleteUser(id) {
+  const u = USERS.find(x => x.id === id);
+  const res = await fetch(`${API}/users/${id}`, { method: 'DELETE' });
+  if (res.ok) {
+    showToast('User Removed', `${u.name} has been removed.`, 's');
+    loadUsers();
+  } else {
+    showToast('Error', 'Failed to delete user.', 'e');
+  }
+}
+
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
+overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
+
+function showToast(title, msg, type = 's') {
+  const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };
+  const stack = document.getElementById('toastStack');
+  const el = document.createElement('div');
+  el.className = 'toast-item';
+  el.innerHTML = `<div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div><div class="toast-body"><strong>${title}</strong><p>${msg}</p></div><button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
+  stack.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
+}
+
+async function loadUsers() {
+  const res = await fetch(`${API}/users`);
+  USERS = await res.json();
+  applyFilters();
+}
+
+loadUsers();
+</script>
+</body>
+</html>

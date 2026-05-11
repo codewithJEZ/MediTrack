@@ -176,6 +176,14 @@
       box-shadow: 0 4px 14px rgba(123,29,30,.25);
     }
     .btn-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(123,29,30,.35); }
+    .btn-modal-danger {
+      flex: 1; padding: 12px;
+      background: var(--red); color: var(--white);
+      border: none; border-radius: 10px;
+      font-size: .9rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+      cursor: pointer; transition: var(--transition);
+    }
+    .btn-modal-danger:hover { opacity: .88; transform: translateY(-1px); }
 
     @media (max-width: 768px) {
       .user-summary { grid-template-columns: 1fr 1fr; }
@@ -302,15 +310,8 @@
         </div>
         <select class="filter-select" id="roleFilter">
           <option value="">All Roles</option>
-          <option value="Administrator">Administrator</option>
-          <option value="Nurse">Nurse</option>
-          <option value="Staff">Staff</option>
-          <option value="Viewer">Viewer</option>
-        </select>
-        <select class="filter-select" id="statusFilter">
-          <option value="">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
+          <option value="admin">Admin</option>
+          <option value="staff">Staff</option>
         </select>
       </div>
       <div class="toolbar-right">
@@ -332,8 +333,7 @@
             <tr>
               <th>User</th>
               <th>Role</th>
-              <th>Status</th>
-              <th>Last Active</th>
+              <th>Created</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -351,27 +351,18 @@
     <h2><i class="bi bi-person-plus-fill" style="color:var(--maroon);margin-right:8px;"></i>Add New User</h2>
     <div class="form-group">
       <label>Full Name</label>
-      <input type="text" id="newUserName" placeholder="e.g. Nurse Juan Dela Cruz" />
+      <input type="text" id="newUserName" placeholder="e.g. Juan Dela Cruz" />
     </div>
     <div class="form-group">
-      <label>Email Address</label>
-      <input type="email" id="newUserEmail" placeholder="e.g. juan@clinic.ph" />
+      <label>Username</label>
+      <input type="text" id="newUserUsername" placeholder="e.g. juandc" />
     </div>
     <div class="form-group">
       <label>Role</label>
       <select id="newUserRole">
         <option value="">Select role…</option>
-        <option value="Administrator">Administrator</option>
-        <option value="Nurse">Nurse</option>
-        <option value="Staff">Staff</option>
-        <option value="Viewer">Viewer</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Status</label>
-      <select id="newUserStatus">
-        <option value="Active">Active</option>
-        <option value="Inactive">Inactive</option>
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -381,133 +372,50 @@
   </div>
 </div>
 
+<!-- EDIT USER MODAL -->
+<div class="mt-modal-overlay" id="editUserModal">
+  <div class="mt-modal">
+    <h2><i class="bi bi-pencil-fill" style="color:var(--maroon);margin-right:8px;"></i>Edit User</h2>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="editUserName" placeholder="Full name" />
+    </div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="editUserUsername" placeholder="Username" />
+    </div>
+    <div class="form-group">
+      <label>Role</label>
+      <select id="editUserRole">
+        <option value="admin">Admin</option>
+        <option value="staff">Staff</option>
+      </select>
+    </div>
+    <div class="modal-actions" style="flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:10px;width:100%;">
+        <button class="btn-modal-cancel" style="flex:1;" onclick="closeEditModal()">Cancel</button>
+        <button class="btn-modal-confirm" style="flex:1;" onclick="updateUser()"><i class="bi bi-check-lg"></i> Save</button>
+      </div>
+      <button onclick="resetPassword()" style="width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text-2);font-size:.88rem;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;transition:var(--transition);" onmouseover="this.style.borderColor='var(--maroon)';this.style.color='var(--maroon)';" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-2)';"><i class="bi bi-key-fill"></i> Reset Password to 123456</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE USER MODAL -->
+<div class="mt-modal-overlay" id="deleteUserModal">
+  <div class="mt-modal" style="max-width:380px;text-align:center;">
+    <div style="width:60px;height:60px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.6rem;color:var(--red);"><i class="bi bi-person-x-fill"></i></div>
+    <h2 style="margin-bottom:8px;">Remove User</h2>
+    <p style="font-size:.88rem;color:var(--text-2);margin-bottom:20px;">Are you sure you want to remove<br><strong id="deleteUserName"></strong>?<br>This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-modal-danger" onclick="confirmDeleteUser()"><i class="bi bi-trash"></i> Remove</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-stack" id="toastStack"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script>
-const API = 'http://localhost:3000/api';
-const AVATAR_COLORS = ['#7B1D1E','#2563eb','#16a34a','#ea580c','#7c3aed','#0891b2'];
-let USERS = [];
-
-function getInitials(name) {
-  return name.split(' ').filter(Boolean).slice(0,2).map(w => w[0]).join('').toUpperCase();
-}
-function getAvatarColor(id) { return AVATAR_COLORS[(id - 1) % AVATAR_COLORS.length]; }
-
-function renderUsers(data) {
-  const tbody = document.getElementById('usersBody');
-  document.getElementById('userCount').textContent = `${data.length} user${data.length !== 1 ? 's' : ''} found`;
-  document.getElementById('sumAllUsers').textContent    = USERS.length;
-  document.getElementById('sumActiveUsers').textContent = USERS.length;
-  document.getElementById('sumAdmins').textContent      = USERS.filter(u => u.role === 'admin').length;
-
-  tbody.innerHTML = data.map(u => {
-    const roleLabel = u.role.charAt(0).toUpperCase() + u.role.slice(1);
-    const roleClass = u.role === 'admin' ? 'role-admin' : 'role-staff';
-    const lastDt = new Date(u.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
-    return `
-      <tr>
-        <td>
-          <div class="user-cell">
-            <div class="user-tbl-avatar" style="background:${getAvatarColor(u.id)};">${getInitials(u.name)}</div>
-            <div>
-              <div class="user-tbl-name">${u.name}</div>
-              <div class="user-tbl-email">${u.username}</div>
-            </div>
-          </div>
-        </td>
-        <td><span class="role-badge ${roleClass}">${roleLabel}</span></td>
-        <td><span class="pill status-active">Active</span></td>
-        <td class="td-date">${lastDt}</td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            <button class="btn-tbl btn-edit" onclick="editUser(${u.id})"><i class="bi bi-pencil"></i> Edit</button>
-            <button class="btn-tbl btn-del" onclick="deleteUser(${u.id})"><i class="bi bi-trash"></i></button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-}
-
-function applyFilters() {
-  const q    = document.getElementById('searchInput').value.toLowerCase();
-  const role = document.getElementById('roleFilter').value.toLowerCase();
-  const data = USERS.filter(u =>
-    (!q    || u.name.toLowerCase().includes(q) || u.username.toLowerCase().includes(q)) &&
-    (!role || u.role === role)
-  );
-  renderUsers(data);
-}
-
-document.getElementById('searchInput').addEventListener('input', applyFilters);
-document.getElementById('roleFilter').addEventListener('change', applyFilters);
-document.getElementById('statusFilter').addEventListener('change', applyFilters);
-
-document.getElementById('btnAddUser').addEventListener('click', () => {
-  document.getElementById('newUserName').value = '';
-  document.getElementById('newUserEmail').value = '';
-  document.getElementById('newUserRole').value = '';
-  document.getElementById('newUserStatus').value = 'Active';
-  document.getElementById('addUserModal').classList.add('show');
-});
-function closeAddModal() { document.getElementById('addUserModal').classList.remove('show'); }
-
-async function saveUser() {
-  const name     = document.getElementById('newUserName').value.trim();
-  const username = document.getElementById('newUserEmail').value.trim();
-  const role     = document.getElementById('newUserRole').value;
-  if (!name || !username || !role) { showToast('Incomplete Form', 'Please fill in all required fields.', 'e'); return; }
-  const res = await fetch(`${API}/users`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, username, password: 'changeme', role: role.toLowerCase() })
-  });
-  if (res.ok) {
-    closeAddModal();
-    showToast('User Added', `${name} has been added successfully.`, 's');
-    loadUsers();
-  } else {
-    showToast('Error', 'Failed to add user.', 'e');
-  }
-}
-
-function editUser(id) {
-  const u = USERS.find(x => x.id === id);
-  showToast('Edit User', `Editing "${u.name}" — form coming soon.`, 'w');
-}
-
-async function deleteUser(id) {
-  const u = USERS.find(x => x.id === id);
-  const res = await fetch(`${API}/users/${id}`, { method: 'DELETE' });
-  if (res.ok) {
-    showToast('User Removed', `${u.name} has been removed.`, 's');
-    loadUsers();
-  } else {
-    showToast('Error', 'Failed to delete user.', 'e');
-  }
-}
-
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-
-function showToast(title, msg, type = 's') {
-  const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };
-  const stack = document.getElementById('toastStack');
-  const el = document.createElement('div');
-  el.className = 'toast-item';
-  el.innerHTML = `<div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div><div class="toast-body"><strong>${title}</strong><p>${msg}</p></div><button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
-  stack.appendChild(el);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
-}
-
-async function loadUsers() {
-  const res = await fetch(`${API}/users`);
-  USERS = await res.json();
-  applyFilters();
-}
-
-loadUsers();
-</script>
+<script src="users.js"></script>
 </body>
 </html>

@@ -23,6 +23,11 @@ db.exec(`
     medicine_id INTEGER NOT NULL,
     type TEXT NOT NULL,
     quantity INTEGER NOT NULL,
+    notes TEXT,
+    patient_name TEXT,
+    course TEXT,
+    section TEXT,
+    illness TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (medicine_id) REFERENCES medicines(id)
   );
@@ -44,6 +49,12 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 `);
+
+try { db.exec('ALTER TABLE transactions ADD COLUMN notes TEXT'); } catch (_) {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN patient_name TEXT'); } catch (_) {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN course TEXT'); } catch (_) {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN section TEXT'); } catch (_) {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN illness TEXT'); } catch (_) {}
 
 const existing = db.prepare('SELECT * FROM users WHERE username = ?').get('admin');
 

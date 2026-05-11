@@ -469,6 +469,64 @@ document.getElementById('navUserName').textContent = storedUser;
 document.getElementById('navAvatarInitial').textContent = storedUser.slice(0,2).toUpperCase();
 document.getElementById('welcomeHeading').textContent = `Welcome back, ${storedUser} 👋`;
 document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+const API = 'http://localhost:3000/api';
+
+async function loadDashboard() {
+  const [medsRes, txRes] = await Promise.all([
+    fetch(`${API}/medicines`),
+    fetch(`${API}/transactions`)
+  ]);
+  const medicines = await medsRes.json();
+  const transactions = await txRes.json();
+
+  const lowStock = medicines.filter(m => m.quantity < 10);
+
+  document.getElementById('statTotalMedicines').textContent = medicines.length;
+  document.getElementById('statTotalTransactions').textContent = transactions.length;
+  document.getElementById('statLowStock').textContent = lowStock.length;
+
+  const now = new Date();
+  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const expiringSoon = medicines.filter(m => m.expiration_date && new Date(m.expiration_date) <= in30 && new Date(m.expiration_date) >= now);
+  document.getElementById('statExpiringSoon').textContent = expiringSoon.length;
+
+  const medMap = {};
+  medicines.forEach(m => { medMap[m.id] = m; });
+
+  const recent = [...transactions].reverse().slice(0, 5);
+  document.getElementById('transactionsBody').innerHTML = recent.length ? recent.map(t => {
+    const med = medMap[t.medicine_id];
+    const dt = new Date(t.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    const isIn = t.type === 'in';
+    return `<tr>
+      <td>${med ? med.name : '—'}</td>
+      <td class="td-date">${dt}</td>
+      <td class="td-qty">${t.quantity}</td>
+      <td><span class="pill ${isIn ? 'pill-green' : 'pill-red'}">${isIn ? 'Restock' : 'Dispense'}</span></td>
+      <td>—</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:20px;">No transactions yet.</td></tr>`;
+
+  const alertList = document.getElementById('alertList');
+  alertList.innerHTML = lowStock.length ? lowStock.map(m => {
+    const isCritical = m.quantity < 5;
+    const avaClass = isCritical ? 'ava-red' : 'ava-orange';
+    const badgeClass = isCritical ? 'sbg-red' : 'sbg-orange';
+    return `<div class="alert-item">
+      <div class="alert-left">
+        <div class="alert-avatar ${avaClass}"><i class="bi bi-capsule-pill"></i></div>
+        <div>
+          <span class="alert-med">${m.name}</span>
+          <span class="alert-cat">${m.quantity} ${m.unit || 'units'} remaining</span>
+        </div>
+      </div>
+      <span class="stock-badge ${badgeClass}">${isCritical ? 'Critical' : 'Low'}</span>
+    </div>`;
+  }).join('') : `<p style="color:var(--text-3);font-size:.85rem;padding:12px 0;">No low stock items.</p>`;
+}
+
+loadDashboard();
 </script>
 
 </body>

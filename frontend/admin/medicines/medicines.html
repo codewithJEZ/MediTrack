@@ -81,6 +81,60 @@
     }
     .btn-primary-mt:active { transform: none; }
 
+    .btn-secondary-mt {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px;
+      background: var(--surface);
+      color: var(--text-2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: .9rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      transition: var(--transition);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .btn-secondary-mt:hover {
+      background: var(--bg);
+      border-color: var(--maroon);
+      color: var(--maroon);
+      transform: translateY(-1px);
+    }
+    .btn-secondary-mt:active { transform: none; }
+
+    .cat-list { list-style: none; padding: 0; margin: 0; max-height: 260px; overflow-y: auto; }
+    .cat-list-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-light);
+      background: var(--bg);
+      margin-bottom: 6px;
+      transition: var(--transition);
+    }
+    .cat-list-item:hover { border-color: var(--border); background: var(--border-light); }
+    .cat-list-item-name {
+      display: flex; align-items: center; gap: 9px;
+      font-size: .9rem; font-weight: 700; color: var(--text-1);
+    }
+    .cat-list-item-name i { color: var(--maroon); font-size: .85rem; }
+    .btn-cat-del {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .8rem;
+      background: rgba(192,57,43,.08);
+      color: #c0392b;
+      border: 1px solid rgba(192,57,43,.18);
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .btn-cat-del:hover { background: #c0392b; color: var(--white); border-color: #c0392b; }
+    .cat-empty { text-align: center; padding: 28px 0; color: var(--text-3); font-size: .85rem; }
+    .cat-empty i { font-size: 1.8rem; display: block; margin-bottom: 8px; }
+
     /* Table action buttons */
     .btn-tbl {
       display: inline-flex; align-items: center; gap: 5px;
@@ -99,12 +153,24 @@
       box-shadow: 0 2px 8px rgba(123,29,30,.22);
     }
     .btn-use:hover { background: var(--maroon-dark); transform: translateY(-1px); }
+    .btn-view {
+      background: var(--bg);
+      color: var(--text-2);
+      border: 1.5px solid var(--border);
+    }
+    .btn-view:hover { background: var(--border-light); color: #1a6fc4; border-color: #1a6fc4; }
     .btn-edit {
       background: var(--bg);
       color: var(--text-2);
       border: 1.5px solid var(--border);
     }
     .btn-edit:hover { background: var(--border-light); color: var(--maroon); border-color: var(--maroon); }
+    .btn-del {
+      background: rgba(192,57,43,.1);
+      color: #c0392b;
+      border: 1.5px solid rgba(192,57,43,.22);
+    }
+    .btn-del:hover { background: #c0392b; color: var(--white); border-color: #c0392b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,57,43,.32); }
 
     /* Status pills */
     .status-ok       { background: var(--green-bg);   color: var(--green);  }
@@ -191,6 +257,167 @@
       box-shadow: 0 4px 14px rgba(123,29,30,.25);
     }
     .btn-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(123,29,30,.35); }
+    .btn-modal-danger {
+      flex: 1; padding: 12px;
+      background: linear-gradient(135deg, #c0392b, #e74c3c);
+      color: var(--white); border: none;
+      border-radius: 10px; font-size: .9rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer; transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(192,57,43,.3);
+    }
+    .btn-modal-danger:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(192,57,43,.42); }
+
+    .use-label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--text-2);
+      margin-bottom: 5px;
+    }
+
+    /* Delete modal */
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(.86); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .delete-modal {
+      text-align: center;
+      max-width: 380px;
+      padding: 40px 32px 32px;
+      animation: scaleIn .28s cubic-bezier(.34,1.2,.64,1);
+    }
+    .delete-icon-wrap {
+      width: 76px; height: 76px;
+      background: rgba(192,57,43,.1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      border: 2px solid rgba(192,57,43,.18);
+    }
+    .delete-icon-wrap i { font-size: 2.1rem; color: #c0392b; }
+    .delete-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.22rem; font-weight: 800; color: var(--text-1);
+      margin-bottom: 10px;
+    }
+    .delete-sub {
+      font-size: .875rem; color: var(--text-2);
+      line-height: 1.65; margin-bottom: 28px;
+    }
+    .delete-modal .btn-modal-danger {
+      flex: 1.4;
+    }
+
+    /* View Medicine Modal */
+    .view-med-modal {
+      max-width: 480px;
+      padding: 0;
+      overflow: hidden;
+    }
+    .view-med-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 24px 24px 20px;
+      position: relative;
+    }
+    .view-med-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      color: var(--white);
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(123,29,30,.3);
+    }
+    .view-med-title-block {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .view-med-title-block h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.08rem;
+      font-weight: 800;
+      color: var(--text-1);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .view-med-close {
+      width: 34px; height: 34px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .95rem;
+      color: var(--text-3);
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      transition: var(--transition);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .view-med-close:hover { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+    .view-med-divider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 0 24px;
+    }
+    .view-med-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 20px 24px 0;
+    }
+    .view-med-field {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 12px;
+      padding: 13px 14px;
+      transition: var(--transition);
+    }
+    .view-med-field:hover {
+      background: var(--border-light);
+      border-color: var(--border);
+    }
+    .view-field-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem;
+      flex-shrink: 0;
+    }
+    .view-field-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .view-field-label {
+      font-size: .7rem;
+      font-weight: 800;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+    .view-field-value {
+      font-size: .9rem;
+      font-weight: 700;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media (max-width: 480px) {
+      .view-med-grid { grid-template-columns: 1fr; }
+      .view-med-field { grid-column: auto !important; }
+    }
 
     /* Empty state */
     .empty-state {
@@ -206,6 +433,9 @@
       .toolbar-left, .toolbar-right { width: 100%; }
       .page-toolbar { flex-direction: column; align-items: stretch; }
       .toolbar-right { justify-content: flex-end; }
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     @media (max-width: 480px) {
       .medi-table th:nth-child(4),
@@ -317,6 +547,9 @@
         </select>
       </div>
       <div class="toolbar-right">
+        <button class="btn-secondary-mt" id="btnManageCategories" onclick="openCategoriesModal()">
+          <i class="bi bi-tags-fill"></i> Categories
+        </button>
         <button class="btn-primary-mt" id="btnAddMedicine">
           <i class="bi bi-plus-lg"></i> Add Medicine
         </button>
@@ -354,175 +587,211 @@
   </main>
 </div>
 
-<!-- USE MEDICINE MODAL -->
+<!-- DISPENSE / USE MODAL -->
 <div class="mt-modal-overlay" id="useModal">
-  <div class="mt-modal">
-    <h2><i class="bi bi-box-arrow-right" style="color:var(--maroon);margin-right:8px;"></i>Use Medicine</h2>
-    <p class="modal-sub" id="useModalSub">Select quantity to dispense</p>
-    <div class="modal-qty-btns">
-      <button class="btn-qty" onclick="setUseQty(1)">+1 <span style="font-size:.7rem;font-weight:600;display:block;margin-top:2px;">Quick Use</span></button>
-      <button class="btn-qty" onclick="setUseQty(2)">+2 <span style="font-size:.7rem;font-weight:600;display:block;margin-top:2px;">Quick Use</span></button>
-    </div>
-    <div class="modal-divider">or enter custom amount</div>
-    <div class="modal-custom-row">
-      <input type="number" class="modal-custom-input" id="customQtyInput" placeholder="Enter quantity…" min="1" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeUseModal()">Cancel</button>
-      <button class="btn-modal-confirm" onclick="confirmUse()"><i class="bi bi-check-lg"></i> Confirm Use</button>
-    </div>
+  <div class="mt-modal" style="max-width:480px;">
+    <h2><i class="bi bi-clipboard2-pulse-fill" style="color:var(--maroon);margin-right:8px;"></i>Dispense Medicine</h2>
+    <p class="modal-sub" id="useModalSub">Fill in patient details and quantity</p>
+    <form id="dispenseForm" onsubmit="confirmUse(event)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+        <div style="grid-column:1/-1;">
+          <label class="use-label">Patient Name</label>
+          <input type="text" id="usePatientName" class="modal-custom-input" placeholder="e.g. Juan dela Cruz" required style="width:100%;" />
+        </div>
+        <div>
+          <label class="use-label">Course / Program</label>
+          <input type="text" id="useCourse" class="modal-custom-input" placeholder="e.g. BSIT" required style="width:100%;" />
+        </div>
+        <div>
+          <label class="use-label">Section</label>
+          <input type="text" id="useSection" class="modal-custom-input" placeholder="e.g. 3-A" required style="width:100%;" />
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="use-label">Illness / Complaint</label>
+          <input type="text" id="useIllness" class="modal-custom-input" placeholder="e.g. Headache, Fever" required style="width:100%;" />
+        </div>
+        <div style="grid-column:1/-1;">
+          <label class="use-label">Quantity to Dispense</label>
+          <input type="number" id="customQtyInput" class="modal-custom-input" placeholder="Enter quantity…" min="1" required style="width:100%;" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeUseModal()">Cancel</button>
+        <button type="submit" class="btn-modal-confirm"><i class="bi bi-check-lg"></i> Dispense</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <div class="toast-stack" id="toastStack"></div>
 
+<!-- DELETE CONFIRMATION MODAL -->
+<div class="mt-modal-overlay" id="deleteModal">
+  <div class="mt-modal delete-modal">
+    <div class="delete-icon-wrap">
+      <i class="bi bi-trash3-fill"></i>
+    </div>
+    <h2 class="delete-title">Delete Medicine</h2>
+    <p class="delete-sub">Are you sure you want to delete<br><strong id="deleteMedName"></strong>?<br>This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-modal-danger" onclick="confirmDelete()"><i class="bi bi-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MEDICINE MODAL -->
+<div class="mt-modal-overlay" id="viewMedModal">
+  <div class="mt-modal view-med-modal">
+    <div class="view-med-header">
+      <div class="view-med-icon-wrap">
+        <i class="bi bi-capsule-pill"></i>
+      </div>
+      <div class="view-med-title-block">
+        <h2 id="viewMedName">Medicine Name</h2>
+        <span id="viewMedStatusBadge" class="pill"></span>
+      </div>
+      <button class="view-med-close" onclick="closeViewModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div class="view-med-divider"></div>
+
+    <div class="view-med-grid">
+      <div class="view-med-field">
+        <div class="view-field-icon" style="background:rgba(37,99,235,.1);color:var(--blue);">
+          <i class="bi bi-tag-fill"></i>
+        </div>
+        <div class="view-field-body">
+          <span class="view-field-label">Category</span>
+          <span class="view-field-value" id="viewMedCategory">—</span>
+        </div>
+      </div>
+
+      <div class="view-med-field">
+        <div class="view-field-icon" style="background:rgba(22,163,74,.1);color:var(--green);">
+          <i class="bi bi-stack"></i>
+        </div>
+        <div class="view-field-body">
+          <span class="view-field-label">Quantity</span>
+          <span class="view-field-value" id="viewMedQuantity">—</span>
+        </div>
+      </div>
+
+      <div class="view-med-field">
+        <div class="view-field-icon" style="background:rgba(234,88,12,.1);color:var(--orange);">
+          <i class="bi bi-rulers"></i>
+        </div>
+        <div class="view-field-body">
+          <span class="view-field-label">Unit</span>
+          <span class="view-field-value" id="viewMedUnit">—</span>
+        </div>
+      </div>
+
+      <div class="view-med-field">
+        <div class="view-field-icon" style="background:rgba(246,172,2,.12);color:var(--yellow-dark);">
+          <i class="bi bi-calendar-event-fill"></i>
+        </div>
+        <div class="view-field-body">
+          <span class="view-field-label">Expiration Date</span>
+          <span class="view-field-value" id="viewMedExpiration">—</span>
+        </div>
+      </div>
+
+      <div class="view-med-field" style="grid-column:1/-1;">
+        <div class="view-field-icon" style="background:rgba(123,29,30,.08);color:var(--maroon);">
+          <i class="bi bi-shield-fill-check"></i>
+        </div>
+        <div class="view-field-body">
+          <span class="view-field-label">Status</span>
+          <span class="view-field-value" id="viewMedStatus">—</span>
+        </div>
+      </div>
+
+      <div class="view-med-field" style="grid-column:1/-1;" id="viewMedDescriptionWrap">
+        <div class="view-field-icon" style="background:rgba(139,92,246,.1);color:#7c3aed;flex-shrink:0;align-self:flex-start;margin-top:2px;">
+          <i class="bi bi-card-text"></i>
+        </div>
+        <div class="view-field-body" style="min-width:0;width:100%;">
+          <span class="view-field-label">Description</span>
+          <span class="view-field-value" id="viewMedDescription" style="white-space:pre-wrap;word-break:break-word;overflow-y:auto;max-height:90px;display:block;font-weight:500;color:var(--text-2);font-size:.85rem;line-height:1.55;">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top:24px;">
+      <button type="button" class="btn-modal-cancel" onclick="closeViewModal()"><i class="bi bi-x"></i> Close</button>
+      <button type="button" class="btn-modal-confirm" onclick="editFromView()"><i class="bi bi-pencil"></i> Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE CATEGORIES MODAL -->
+<div class="mt-modal-overlay" id="categoriesModal">
+  <div class="mt-modal" style="max-width:440px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <h2><i class="bi bi-tags-fill" style="color:var(--maroon);margin-right:8px;"></i>Manage Categories</h2>
+      <button class="view-med-close" onclick="closeCategoriesModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <p class="modal-sub">Add or remove medicine categories</p>
+
+    <form id="addCategoryForm" onsubmit="submitAddCategory(event)" style="display:flex;gap:8px;margin-bottom:16px;">
+      <input type="text" id="newCategoryName" class="modal-custom-input" placeholder="New category name…" required style="flex:1;" />
+      <button type="submit" class="btn-modal-confirm" style="flex:0 0 auto;padding:10px 18px;white-space:nowrap;">
+        <i class="bi bi-plus-lg"></i> Add
+      </button>
+    </form>
+
+    <div style="font-size:.75rem;font-weight:800;color:var(--text-3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">Existing Categories</div>
+    <ul class="cat-list" id="categoryList">
+      <li class="cat-empty"><i class="bi bi-tags"></i>No categories yet.</li>
+    </ul>
+
+    <div class="modal-actions" style="margin-top:20px;">
+      <button type="button" class="btn-modal-cancel" onclick="closeCategoriesModal()"><i class="bi bi-x"></i> Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MEDICINE MODAL -->
+<div class="mt-modal-overlay" id="addMedModal">
+  <div class="mt-modal">
+    <h2><i class="bi bi-plus-circle-fill" style="color:var(--maroon);margin-right:8px;"></i>Add New Medicine</h2>
+    <form id="addForm">
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Medicine Name</label>
+        <input type="text" id="name" class="modal-custom-input" placeholder="e.g. Paracetamol 500mg" required style="width:100%;" />
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Category</label>
+        <select id="category_id" class="modal-custom-input" style="width:100%;">
+          <option value="">Select category…</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Quantity</label>
+        <input type="number" id="quantity" class="modal-custom-input" placeholder="e.g. 100" min="0" required style="width:100%;" />
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Unit</label>
+        <input type="text" id="unit" class="modal-custom-input" placeholder="e.g. tablets, ml, pcs" style="width:100%;" />
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Expiration Date</label>
+        <input type="date" id="expiration_date" class="modal-custom-input" style="width:100%;" />
+      </div>
+      <div class="form-group" style="margin-bottom:18px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Description <span style="font-weight:500;color:var(--text-3);">(optional)</span></label>
+        <textarea id="description" class="modal-custom-input" placeholder="e.g. Used for mild to moderate pain relief…" rows="3" style="width:100%;resize:vertical;min-height:72px;line-height:1.5;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-modal-cancel" onclick="closeAddModal()">Cancel</button>
+        <button type="submit" class="btn-modal-confirm"><i class="bi bi-check-lg"></i> Save Medicine</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script>
-const API = 'http://localhost:3000/api';
-let allMedicines = [];
-let categoryMap = {};
-let currentMedicines = [];
-let selectedMedId = null;
-let useQty = 0;
-
-function getStatus(m) {
-  if (m.quantity <= 10) return 'Low Stock';
-  if (m.expiration_date) {
-    const days = (new Date(m.expiration_date) - new Date()) / 86400000;
-    if (days <= 30) return 'Expiring Soon';
-  }
-  return 'OK';
-}
-
-function renderTable(data) {
-  const tbody = document.getElementById('medicinesBody');
-  const empty = document.getElementById('emptyState');
-  const count = document.getElementById('medicineCount');
-  count.textContent = `${data.length} item${data.length !== 1 ? 's' : ''} found`;
-  if (!data.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  tbody.innerHTML = data.map(m => {
-    const status = getStatus(m);
-    const statusClass = status === 'OK' ? 'status-ok' : status === 'Expiring Soon' ? 'status-expiring' : 'status-low';
-    const dotColor    = status === 'OK' ? 'var(--green)' : status === 'Expiring Soon' ? 'var(--yellow-dark)' : 'var(--red)';
-    const expDate     = m.expiration_date ? new Date(m.expiration_date).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' }) : '—';
-    const cat         = categoryMap[m.category_id] || '—';
-    return `
-      <tr>
-        <td><div class="td-medicine"><div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>${m.name}</div></td>
-        <td style="color:var(--text-2);font-size:.84rem;">${cat}</td>
-        <td class="td-qty">${m.quantity}</td>
-        <td style="color:var(--text-3);font-size:.83rem;">${m.unit||'—'}</td>
-        <td class="td-date">${expDate}</td>
-        <td>
-          <span class="pill ${statusClass}">
-            <span style="background:${dotColor};width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;"></span>
-            ${status}
-          </span>
-        </td>
-        <td>
-          <div style="display:flex;gap:6px;">
-            <button class="btn-tbl btn-use" onclick="openUseModal(${m.id})"><i class="bi bi-box-arrow-right"></i> Use</button>
-            <button class="btn-tbl btn-edit" onclick="editMedicine(${m.id})"><i class="bi bi-pencil"></i> Edit</button>
-          </div>
-        </td>
-      </tr>`;
-  }).join('');
-}
-
-function applyFilters() {
-  const q    = document.getElementById('searchInput').value.toLowerCase();
-  const cat  = document.getElementById('categoryFilter').value;
-  const stat = document.getElementById('statusFilter').value;
-  currentMedicines = allMedicines.filter(m => {
-    const catName = categoryMap[m.category_id] || '';
-    const status  = getStatus(m);
-    return (!q    || m.name.toLowerCase().includes(q) || catName.toLowerCase().includes(q)) &&
-           (!cat  || catName === cat) &&
-           (!stat || status === stat);
-  });
-  renderTable(currentMedicines);
-}
-
-document.getElementById('searchInput').addEventListener('input', applyFilters);
-document.getElementById('categoryFilter').addEventListener('change', applyFilters);
-document.getElementById('statusFilter').addEventListener('change', applyFilters);
-
-function openUseModal(id) {
-  selectedMedId = id;
-  useQty = 0;
-  document.getElementById('customQtyInput').value = '';
-  const m = allMedicines.find(x => x.id === id);
-  document.getElementById('useModalSub').textContent = `${m.name} — Available: ${m.quantity} ${m.unit||''}`;
-  document.getElementById('useModal').classList.add('show');
-}
-function closeUseModal() {
-  document.getElementById('useModal').classList.remove('show');
-  selectedMedId = null; useQty = 0;
-}
-function setUseQty(n) {
-  useQty = n;
-  document.getElementById('customQtyInput').value = n;
-}
-async function confirmUse() {
-  const input = parseInt(document.getElementById('customQtyInput').value, 10);
-  const qty   = input || useQty;
-  if (!qty || qty < 1) { showToast('Error', 'Please enter a valid quantity.', 'e'); return; }
-  const m = allMedicines.find(x => x.id === selectedMedId);
-  if (qty > m.quantity) { showToast('Insufficient Stock', `Only ${m.quantity} ${m.unit||''} available.`, 'e'); return; }
-  const res = await fetch(`${API}/transactions`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ medicine_id: selectedMedId, type: 'out', quantity: qty })
-  });
-  if (res.ok) {
-    showToast('Dispensed', `${qty} ${m.unit||''} of ${m.name} dispensed successfully.`, 's');
-    closeUseModal();
-    loadMedicines();
-  } else {
-    const err = await res.json();
-    showToast('Error', err.error || 'Failed to dispense.', 'e');
-  }
-}
-
-function editMedicine(id) {
-  const m = allMedicines.find(x => x.id === id);
-  showToast('Edit Medicine', `Editing "${m.name}" — form coming soon.`, 'w');
-}
-
-document.getElementById('btnAddMedicine').addEventListener('click', () => {
-  showToast('Add Medicine', 'Medicine registration form coming soon.', 'w');
-});
-
-const sidebar  = document.getElementById('sidebar');
-const overlay  = document.getElementById('sidebarOverlay');
-const menuBtn  = document.getElementById('menuToggle');
-menuBtn.addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-
-function showToast(title, msg, type = 's') {
-  const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };
-  const stack = document.getElementById('toastStack');
-  const el = document.createElement('div');
-  el.className = 'toast-item';
-  el.innerHTML = `
-    <div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div>
-    <div class="toast-body"><strong>${title}</strong><p>${msg}</p></div>
-    <button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
-  stack.appendChild(el);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
-}
-
-async function loadMedicines() {
-  const [medsRes, catsRes] = await Promise.all([fetch(`${API}/medicines`), fetch(`${API}/categories`)]);
-  allMedicines = await medsRes.json();
-  const cats = await catsRes.json();
-  categoryMap = {};
-  cats.forEach(c => { categoryMap[c.id] = c.name; });
-  applyFilters();
-}
-
-loadMedicines();
-</script>
+<script src="medicines.js"></script>
 </body>
 </html>

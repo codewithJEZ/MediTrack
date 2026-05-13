@@ -13,13 +13,6 @@
   <link rel="stylesheet" href="../main.css" />
   <link rel="stylesheet" href="transactions.css" />
   <style>
-    .page-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 14px; flex-wrap: wrap; margin-bottom: 22px;
-    }
-    .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
     /* Filter tab pills */
     .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .filter-tab {
@@ -41,27 +34,6 @@
       border-color: var(--maroon);
       box-shadow: 0 4px 14px rgba(123,29,30,.25);
     }
-
-    .page-search {
-      position: relative; display: flex; align-items: center;
-    }
-    .page-search input {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px 10px 38px;
-      font-size: .88rem;
-      font-family: 'Nunito', sans-serif;
-      color: var(--text-1);
-      width: 220px; outline: none;
-      transition: var(--transition);
-    }
-    .page-search input:focus {
-      border-color: var(--maroon);
-      box-shadow: 0 0 0 3px var(--maroon-glow);
-      width: 260px;
-    }
-    .page-search .bi { position: absolute; left: 12px; color: var(--text-3); font-size: .9rem; pointer-events: none; }
 
     /* Type badge */
     .type-in  { background: var(--green-bg);  color: var(--green); }
@@ -97,64 +69,6 @@
     }
     .tx-sum-lbl { font-size: .78rem; font-weight: 600; color: var(--text-3); margin-top: 3px; }
 
-    .date-filter {
-      display: flex; align-items: center; gap: 6px;
-    }
-    .date-filter label {
-      font-size: .8rem; font-weight: 700; color: var(--text-3);
-      white-space: nowrap;
-    }
-    .date-input {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 9px 12px;
-      font-size: .84rem;
-      font-family: 'Nunito', sans-serif;
-      color: var(--text-1);
-      outline: none;
-      transition: var(--transition);
-      cursor: pointer;
-    }
-    .date-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
-    .btn-clear-date {
-      padding: 8px 13px;
-      border-radius: 10px;
-      font-size: .8rem;
-      font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      cursor: pointer;
-      border: 1.5px solid var(--border);
-      background: var(--surface);
-      color: var(--text-3);
-      transition: var(--transition);
-      white-space: nowrap;
-    }
-    .btn-clear-date:hover { border-color: var(--maroon); color: var(--maroon); }
-
-    .btn-tbl {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: .78rem;
-      font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      transition: var(--transition);
-      cursor: pointer;
-      border: none;
-    }
-    .btn-view {
-      background: var(--bg);
-      color: var(--text-2);
-      border: 1.5px solid var(--border) !important;
-    }
-    .btn-view:hover { background: var(--border-light); color: #1a6fc4; border-color: #1a6fc4 !important; }
-    .btn-delete {
-      background: rgba(192,57,43,.1);
-      color: #c0392b;
-      border: 1.5px solid rgba(192,57,43,.22) !important;
-    }
-    .btn-delete:hover { background: #c0392b; color: var(--white); border-color: #c0392b !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,57,43,.32); }
 
     .vtx-field {
       display: flex; align-items: center; gap: 12px;
@@ -174,10 +88,6 @@
 
     @media (max-width: 768px) {
       .tx-summary { grid-template-columns: 1fr 1fr; }
-      .page-search input { width: 160px; }
-      .page-search input:focus { width: 160px; }
-      .page-toolbar { flex-direction: column; align-items: stretch; }
-      .date-filter { flex-wrap: wrap; }
     }
     @media (max-width: 480px) {
       .tx-summary { grid-template-columns: 1fr; }
@@ -185,39 +95,6 @@
       .medi-table td:nth-child(5) { display: none; }
     }
 
-    /* Modal */
-    .mt-modal-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(10,10,20,.55);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      align-items: center; justify-content: center;
-    }
-    .mt-modal-overlay.show { display: flex; }
-    .mt-modal {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 32px 28px;
-      width: 100%; max-width: 420px;
-      margin: 16px;
-      box-shadow: var(--shadow-lg);
-      animation: fadeUp .32s cubic-bezier(.34,1.2,.64,1);
-    }
-    .mt-modal h2 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.15rem; font-weight: 800;
-      color: var(--text-1); margin-bottom: 4px;
-    }
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-modal-cancel {
-      flex: 1; padding: 12px;
-      background: var(--bg); color: var(--text-2);
-      border: 1.5px solid var(--border);
-      border-radius: 10px; font-size: .9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer; transition: var(--transition);
-    }
-    .btn-modal-cancel:hover { background: var(--border-light); }
   </style>
 </head>
 <body>
@@ -256,14 +133,15 @@
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar">A</div>
+        <div class="sidebar-avatar user-avatar"></div>
         <div class="sidebar-user-info">
-          <strong>Admin User</strong>
-          <small>System Administrator</small>
+          <span class="user-name"></span>
+          <span class="user-role"></span>
         </div>
       </div>
-      <button class="btn-sidebar-logout" id="btnLogout">
-        <i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Logout</span>
+      <button class="btn-sidebar-logout logout-btn" type="button">
+        <i class="bi bi-box-arrow-right nav-icon"></i>
+        <span class="nav-label">Logout</span>
       </button>
     </div>
   </aside>
@@ -278,18 +156,11 @@
       </div>
     </div>
     <div class="navbar-right">
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search medicines…" />
-      </div>
-      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
-      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
-      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
       <div class="navbar-user" tabindex="0">
-        <div class="user-avatar-nav">AD</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav">Admin User</span>
-          <span class="user-role-nav">Administrator</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
@@ -478,6 +349,7 @@
 
 <div class="toast-stack" id="toastStack"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
 <script src="transactions.js"></script>
 </body>
 </html>

@@ -124,13 +124,13 @@
     <!-- Footer: User Info + Logout -->
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar" id="sidebarAvatarInitial" aria-hidden="true">A</div>
+        <div class="sidebar-avatar user-avatar"></div>
         <div class="sidebar-user-info">
-          <strong id="sidebarUserName">Admin User</strong>
-          <small id="sidebarUserRole">System Administrator</small>
+          <span class="user-name"></span>
+          <span class="user-role"></span>
         </div>
       </div>
-      <button class="btn-sidebar-logout" id="btnLogout" aria-label="Logout">
+      <button class="btn-sidebar-logout logout-btn" type="button">
         <i class="bi bi-box-arrow-right nav-icon"></i>
         <span class="nav-label">Logout</span>
       </button>
@@ -166,41 +166,16 @@
     </div>
 
     <div class="navbar-right">
-      <!-- Search Bar -->
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search"
-               id="navSearchInput"
-               placeholder="Search medicines…"
-               aria-label="Search medicines" />
-      </div>
-
-      <!-- Notifications -->
-      <button class="btn-icon-nav keep" id="btnNotifications" aria-label="Notifications">
-        <i class="bi bi-bell-fill"></i>
-        <span class="notif-badge" id="notifBadge" aria-hidden="true" style="display:none;"></span>
-      </button>
-
-      <!-- Calendar -->
-      <button class="btn-icon-nav" id="btnCalendar" aria-label="Calendar">
-        <i class="bi bi-calendar3"></i>
-      </button> 
-
-      <!-- Help -->
-      <button class="btn-icon-nav" id="btnHelp" aria-label="Help">
-        <i class="bi bi-question-circle"></i>
-      </button>
-
       <!-- User Profile Block -->
       <div class="navbar-user"
            id="navbarUser"
            role="button"
            tabindex="0"
            aria-label="User Profile">
-        <div class="user-avatar-nav" id="navAvatarInitial" aria-hidden="true">AD</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav" id="navUserName">Admin User</span>
-          <span class="user-role-nav" id="navUserRole">Administrator</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
@@ -244,7 +219,7 @@
         <div class="sec-title">Inventory Overview</div>
         <div class="sec-sub">Live summary of your clinic stock</div>
       </div>
-      <a href="#" class="btn-see-all">
+      <a href="../medicines/medicines.html" class="btn-see-all">
         View All&nbsp;<i class="bi bi-arrow-right"></i>
       </a>
     </div>
@@ -447,6 +422,7 @@
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
 
 
 <!-- ============================================================
@@ -463,20 +439,60 @@ overlay.addEventListener('click', () => {
   sidebar.classList.remove('open');
   overlay.classList.remove('show');
 });
-document.getElementById('btnLogout').addEventListener('click', () => {
-  localStorage.removeItem('user');
-  window.location.href = '../../index.html';
-});
-const storedAdmin = JSON.parse(localStorage.getItem('user'));
-const storedUser = storedAdmin ? storedAdmin.name : 'Admin User';
-document.getElementById('sidebarUserName').textContent = storedUser;
-document.getElementById('sidebarAvatarInitial').textContent = storedUser.charAt(0).toUpperCase();
-document.getElementById('navUserName').textContent = storedUser;
-document.getElementById('navAvatarInitial').textContent = storedUser.slice(0,2).toUpperCase();
+const storedAdmin = JSON.parse(localStorage.getItem('user') || 'null');
+const storedUser = storedAdmin ? (storedAdmin.username || storedAdmin.name || 'User') : 'User';
 document.getElementById('welcomeHeading').textContent = `Welcome back, ${storedUser} 👋`;
 document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
 const API = 'http://localhost:3000/api';
+let lowStock = [];
+
+Chart.defaults.font.family = "'Nunito', sans-serif";
+Chart.defaults.color = '#8d93b0';
+
+const usageChart = new Chart(document.getElementById('usageChart'), {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [
+      { label: 'Dispensed', data: [], backgroundColor: '#7B1D1E', borderRadius: 6, barPercentage: .55 },
+      { label: 'Restocked', data: [], backgroundColor: '#F6AC02', borderRadius: 6, barPercentage: .55 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { display: false }, border: { display: false } },
+      y: { grid: { color: '#eef0f6' }, border: { display: false }, ticks: { stepSize: 5, precision: 0 } }
+    }
+  }
+});
+
+const stockDonutChart = new Chart(document.getElementById('stockDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: ['OK', 'Low Stock', 'Expiring Soon'],
+    datasets: [{ data: [0, 0, 0], backgroundColor: ['#16a34a', '#dc2626', '#F6AC02'], borderWidth: 0, hoverOffset: 6 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } }
+});
+
+function renderDonutList(ok, low, exp) {
+  const items = [
+    { label: 'OK',           val: ok,  color: '#16a34a' },
+    { label: 'Low Stock',    val: low, color: '#dc2626' },
+    { label: 'Expiring Soon',val: exp, color: '#F6AC02' },
+  ];
+  document.getElementById('donutList').innerHTML = items.map(d =>
+    `<div class="donut-row">
+      <div class="donut-left"><div class="donut-dot" style="background:${d.color};"></div><span class="donut-lbl">${d.label}</span></div>
+      <span class="donut-val">${d.val}</span>
+    </div>`
+  ).join('');
+}
+
+renderDonutList(0, 0, 0);
 
 async function loadDashboard() {
   const [medsRes, txRes] = await Promise.all([
@@ -486,31 +502,57 @@ async function loadDashboard() {
   const medicines = await medsRes.json();
   const transactions = await txRes.json();
 
-  const lowStock = medicines.filter(m => m.quantity < 10);
+  const now = new Date();
+  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  lowStock = medicines.filter(m => m.quantity < 10);
+  const expiringSoon = medicines.filter(m => {
+    if (!m.expiration_date) return false;
+    const exp = new Date(m.expiration_date);
+    return exp >= now && exp <= in30;
+  });
 
   document.getElementById('statTotalMedicines').textContent = medicines.length;
   document.getElementById('statTotalTransactions').textContent = transactions.length;
   document.getElementById('statLowStock').textContent = lowStock.length;
-
-  const now = new Date();
-  const in30 = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const expiringSoon = medicines.filter(m => m.expiration_date && new Date(m.expiration_date) <= in30 && new Date(m.expiration_date) >= now);
   document.getElementById('statExpiringSoon').textContent = expiringSoon.length;
 
-  const medMap = {};
-  medicines.forEach(m => { medMap[m.id] = m; });
+  // --- Usage bar chart (last 6 months) ---
+  const monthBuckets = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+    return { year: d.getFullYear(), month: d.getMonth(), label: d.toLocaleDateString('en-PH', { month: 'short' }) };
+  });
+  usageChart.data.labels = monthBuckets.map(b => b.label);
+  usageChart.data.datasets[0].data = monthBuckets.map(b =>
+    transactions.filter(t => {
+      const d = new Date(t.created_at);
+      return t.type === 'out' && d.getFullYear() === b.year && d.getMonth() === b.month;
+    }).reduce((s, t) => s + (t.quantity || 0), 0)
+  );
+  usageChart.data.datasets[1].data = monthBuckets.map(b =>
+    transactions.filter(t => {
+      const d = new Date(t.created_at);
+      return t.type === 'in' && d.getFullYear() === b.year && d.getMonth() === b.month;
+    }).reduce((s, t) => s + (t.quantity || 0), 0)
+  );
+  usageChart.update();
+
+  // --- Stock donut chart ---
+  const okMeds = medicines.filter(m => m.quantity >= 10 && (!m.expiration_date || new Date(m.expiration_date) > in30));
+  stockDonutChart.data.datasets[0].data = [okMeds.length, lowStock.length, expiringSoon.length];
+  stockDonutChart.update();
+  renderDonutList(okMeds.length, lowStock.length, expiringSoon.length);
 
   const recent = [...transactions].reverse().slice(0, 5);
   document.getElementById('transactionsBody').innerHTML = recent.length ? recent.map(t => {
-    const med = medMap[t.medicine_id];
-    const dt = new Date(t.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+    const dt   = new Date(t.created_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
     const isIn = t.type === 'in';
     return `<tr>
-      <td>${med ? med.name : '—'}</td>
+      <td>${t.medicine_name || '—'}</td>
       <td class="td-date">${dt}</td>
       <td class="td-qty">${t.quantity}</td>
       <td><span class="pill ${isIn ? 'pill-green' : 'pill-red'}">${isIn ? 'Restock' : 'Dispense'}</span></td>
-      <td>—</td>
+      <td>${t.performed_by || '—'}</td>
     </tr>`;
   }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:20px;">No transactions yet.</td></tr>`;
 
@@ -533,6 +575,46 @@ async function loadDashboard() {
 }
 
 loadDashboard();
+
+const nav = {
+  btnAddMedicine:         '../medicines/medicines.html',
+  btnDispense:            '../transactions/transactions.html',
+  btnRestock:             '../ris/ris.html',
+  btnGenerateReport:      '../reports/reports.html',
+  btnViewAllTransactions: '../transactions/transactions.html',
+};
+Object.entries(nav).forEach(([id, href]) => {
+  document.getElementById(id)?.addEventListener('click', () => { window.location.href = href; });
+});
+
+// Stat card navigation
+const cardNav = {
+  cardTotalMedicines:    '../medicines/medicines.html',
+  cardTotalTransactions: '../transactions/transactions.html',
+  cardLowStock:          '../reports/reports.html',
+  cardExpiringSoon:      '../reports/reports.html',
+};
+Object.entries(cardNav).forEach(([id, href]) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', () => { window.location.href = href; });
+  el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.href = href; } });
+});
+
+document.getElementById('btnRequestReorder')?.addEventListener('click', () => {
+  const cart = JSON.parse(localStorage.getItem('requestCart') || '[]');
+  lowStock.forEach(m => {
+    const existing = cart.find(item => item.id === m.id);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({ id: m.id, name: m.name, unit: m.unit || '', qty: 1, note: '' });
+    }
+  });
+  console.log('[RequestReorder] cart updated:', cart);
+  localStorage.setItem('requestCart', JSON.stringify(cart));
+  window.location.href = '../medicines/medicines.html';
+});
 </script>
 
 </body>

@@ -17,12 +17,7 @@ sidebarOverlay.addEventListener('click', () => {
   sidebar.classList.remove('open');
   sidebarOverlay.classList.remove('show');
 });
-document.getElementById('btnLogout').addEventListener('click', () => {
-  localStorage.removeItem('user');
-  window.location.href = '../../index.html';
-});
 
-document.getElementById('btnRefresh').addEventListener('click', loadRIS);
 
 // ── Toast ─────────────────────────────────────────────────────
 
@@ -41,14 +36,15 @@ function showToast(title, msg, type = 's') {
 
 // ── Helpers ───────────────────────────────────────────────────
 
-function statusBadge(status) {
+function statusLabel(status) {
+  const normalized = status === 'approved' ? 'completed' : status;
   const map = {
-    pending:  { cls: 'badge-pending',  dot: '#c98c00', label: 'Pending' },
-    approved: { cls: 'badge-approved', dot: '#16a34a', label: 'Approved' },
-    rejected: { cls: 'badge-rejected', dot: '#dc2626', label: 'Rejected' },
+    pending: 'Pending',
+    approved_for_purchase: 'Approved (For Purchase)',
+    completed: 'Completed',
+    rejected: 'Rejected',
   };
-  const s = map[status] || { cls: 'badge-pending', dot: '#c98c00', label: status };
-  return `<span class="ris-badge ${s.cls}"><span class="ris-badge-dot" style="background:${s.dot};"></span>${s.label}</span>`;
+  return map[normalized] || normalized || status || '';
 }
 
 function fmtDate(dt) {
@@ -59,14 +55,28 @@ function fmtDate(dt) {
 // ── Render ────────────────────────────────────────────────────
 
 function applyFilters() {
-  const q    = document.getElementById('searchInput').value.toLowerCase();
-  const stat = document.getElementById('statusFilter').value;
+  const q        = document.getElementById('searchInput').value.toLowerCase();
+  const stat     = document.getElementById('statusFilter').value;
+  const fromVal  = document.getElementById('dateFrom').value;
+  const toVal    = document.getElementById('dateTo').value;
+  const fromDate = fromVal ? new Date(fromVal) : null;
+  const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
   const filtered = allRIS.filter(r => {
     const matchQ    = !q || String(r.id).includes(q) || (r.requested_by || '').toLowerCase().includes(q);
-    const matchStat = !stat || r.status === stat;
-    return matchQ && matchStat;
+    const normalized = r.status === 'approved' ? 'completed' : r.status;
+    const matchStat = !stat || normalized === stat;
+    const txDate    = r.created_at ? new Date(r.created_at) : null;
+    const matchFrom = !fromDate || (txDate && txDate >= fromDate);
+    const matchTo   = !toDate   || (txDate && txDate <= toDate);
+    return matchQ && matchStat && matchFrom && matchTo;
   });
   renderTable(filtered);
+}
+
+function clearDateFilter() {
+  document.getElementById('dateFrom').value = '';
+  document.getElementById('dateTo').value   = '';
+  applyFilters();
 }
 
 function renderTable(data) {
@@ -78,14 +88,16 @@ function renderTable(data) {
   empty.style.display = 'none';
   tbody.innerHTML = data.map(r => {
     const totalItems = Array.isArray(r.items) ? r.items.length : (r.item_count || 0);
-    const isPending = r.status === 'pending';
+    const isPending             = r.status === 'pending';
+    const isApprovedForPurchase = r.status === 'approved_for_purchase';
+    const canExportPdf          = r.status === 'approved_for_purchase' || r.status === 'completed';
     return `<tr>
       <td style="font-weight:800;color:var(--maroon);font-size:.9rem;">#${r.id}</td>
       <td style="font-weight:600;color:var(--text-1);">${r.requested_by || '—'}</td>
       <td style="text-align:center;">
         <span style="background:rgba(37,99,235,.1);color:#1d4ed8;padding:3px 11px;border-radius:20px;font-size:.78rem;font-weight:800;">${totalItems} item${totalItems !== 1 ? 's' : ''}</span>
       </td>
-      <td>${statusBadge(r.status)}</td>
+      <td>${statusLabel(r.status)}</td>
       <td style="color:var(--text-3);font-size:.82rem;">${fmtDate(r.created_at)}</td>
       <td>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -93,11 +105,14 @@ function renderTable(data) {
           ${isPending ? `
           <button class="btn-tbl btn-approve" onclick="approveRIS(${r.id})"><i class="bi bi-check-lg"></i> Approve</button>
           <button class="btn-tbl btn-reject"  onclick="rejectRIS(${r.id})"><i class="bi bi-x-lg"></i> Reject</button>
-          <button class="btn-tbl btn-delete"  onclick="deleteRIS(${r.id})"><i class="bi bi-trash"></i> Delete</button>
           ` : ''}
-          ${r.status === 'approved' ? `
+          ${isApprovedForPurchase ? `
+          <button class="btn-tbl btn-approve" id="deliver-btn-${r.id}" onclick="markDelivered(${r.id})" style="background:rgba(29,78,216,.1);color:#1d4ed8;border-color:rgba(29,78,216,.22);" onmouseover="this.style.background='#1d4ed8';this.style.color='#fff';" onmouseout="this.style.background='rgba(29,78,216,.1)';this.style.color='#1d4ed8';"><i class="bi bi-box-arrow-in-down"></i> Delivered</button>
+          ` : ''}
+          ${canExportPdf ? `
           <button class="btn-tbl btn-pdf" onclick="generateRISPdf(${r.id})"><i class="bi bi-file-pdf-fill"></i> Export PDF</button>
           ` : ''}
+          <button class="btn-tbl btn-delete" onclick="deleteRIS(${r.id})"><i class="bi bi-trash"></i> Delete</button>
         </div>
       </td>
     </tr>`;
@@ -120,6 +135,8 @@ async function loadRIS() {
 
 document.getElementById('searchInput').addEventListener('input', applyFilters);
 document.getElementById('statusFilter').addEventListener('change', applyFilters);
+document.getElementById('dateFrom').addEventListener('change', applyFilters);
+document.getElementById('dateTo').addEventListener('change', applyFilters);
 
 // ── View Modal ────────────────────────────────────────────────
 
@@ -133,7 +150,7 @@ async function openViewModal(id) {
   document.getElementById('viewRISId').textContent        = `#${id}`;
   document.getElementById('viewRISRequester').textContent = '—';
   document.getElementById('viewRISDate').textContent      = '—';
-  document.getElementById('viewRISStatus').innerHTML      = statusBadge('pending');
+  document.getElementById('viewRISStatus').textContent    = statusLabel('pending');
   metaEl.textContent = 'Loading…';
   itemsEl.innerHTML  = '<p style="text-align:center;color:var(--text-3);font-size:.85rem;padding:20px 0;"><span style="display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--maroon);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span>Loading…</p>';
   document.getElementById('viewApproveBtn').style.display = 'none';
@@ -155,7 +172,7 @@ async function openViewModal(id) {
     document.getElementById('viewRISId').textContent        = `#${r.id}`;
     document.getElementById('viewRISRequester').textContent = r.requested_by || '—';
     document.getElementById('viewRISDate').textContent      = fmtDate(r.created_at);
-    document.getElementById('viewRISStatus').innerHTML      = statusBadge(r.status);
+    document.getElementById('viewRISStatus').textContent    = statusLabel(r.status);
     metaEl.textContent = `RIS #${r.id} — ${(r.items || []).length} item(s) requested`;
 
     if (!r.items || !r.items.length) {
@@ -187,12 +204,14 @@ async function openViewModal(id) {
         </table>`;
     }
 
-    const isPending  = r.status === 'pending';
-    const isApproved = r.status === 'approved';
-    document.getElementById('viewApproveBtn').style.display = isPending  ? '' : 'none';
-    document.getElementById('viewRejectBtn').style.display  = isPending  ? '' : 'none';
-    document.getElementById('viewDeleteBtn').style.display  = isPending  ? '' : 'none';
-    document.getElementById('viewPdfBtn').style.display     = isApproved ? '' : 'none';
+    const isPending             = r.status === 'pending';
+    const isApprovedForPurchase = r.status === 'approved_for_purchase';
+    const canExportPdf          = r.status === 'approved_for_purchase' || r.status === 'completed';
+    document.getElementById('viewApproveBtn').style.display  = isPending             ? '' : 'none';
+    document.getElementById('viewRejectBtn').style.display   = isPending             ? '' : 'none';
+    document.getElementById('viewDeliverBtn').style.display  = isApprovedForPurchase ? '' : 'none';
+    document.getElementById('viewDeleteBtn').style.display   = '';
+    document.getElementById('viewPdfBtn').style.display      = canExportPdf          ? '' : 'none';
   } catch {
     metaEl.textContent = 'Failed to load RIS details.';
     itemsEl.innerHTML  = '<p style="text-align:center;color:var(--red);font-size:.85rem;padding:16px 0;">Error loading items.</p>';
@@ -204,14 +223,16 @@ function closeViewModal() {
   currentViewId = null;
 }
 
-function approveRIS(id) { promptAction(id, 'approve'); }
-function rejectRIS(id)  { promptAction(id, 'reject'); }
-function deleteRIS(id)  { promptAction(id, 'delete'); }
+function approveRIS(id)     { promptAction(id, 'approve'); }
+function rejectRIS(id)      { promptAction(id, 'reject'); }
+function deleteRIS(id)      { promptAction(id, 'delete'); }
+function markDelivered(id)  { promptAction(id, 'deliver'); }
 
-function approveFromView() { if (currentViewId !== null) { closeViewModal(); approveRIS(currentViewId); } }
-function rejectFromView()  { if (currentViewId !== null) { closeViewModal(); rejectRIS(currentViewId); } }
-function deleteFromView()  { if (currentViewId !== null) { closeViewModal(); deleteRIS(currentViewId); } }
-function pdfFromView()     { if (currentViewId !== null) { generateRISPdf(currentViewId); } }
+function approveFromView()  { if (currentViewId !== null) { closeViewModal(); approveRIS(currentViewId); } }
+function rejectFromView()   { if (currentViewId !== null) { closeViewModal(); rejectRIS(currentViewId); } }
+function deliverFromView()  { if (currentViewId !== null) { closeViewModal(); markDelivered(currentViewId); } }
+function deleteFromView()   { if (currentViewId !== null) { closeViewModal(); deleteRIS(currentViewId); } }
+function pdfFromView()      { if (currentViewId !== null) { generateRISPdf(currentViewId); } }
 
 // ── Confirm Modal ─────────────────────────────────────────────
 
@@ -227,8 +248,16 @@ function promptAction(id, action) {
     iconBg    = 'rgba(22,163,74,.1)';
     iconBorder = '2px solid rgba(22,163,74,.22)';
     titleText = 'Approve RIS';
-    msgText   = `Approve RIS #${id}? This will update stock and mark the request as approved.`;
+    msgText   = `Approve RIS #${id}? This will mark the request as Approved (For Purchase). Stock is updated only when marked as Delivered.`;
     btnText   = 'Approve';
+    btnCls    = 'btn-modal-approve';
+  } else if (action === 'deliver') {
+    iconHtml  = '<i class="bi bi-box-arrow-in-down" style="font-size:2.1rem;color:#1d4ed8;"></i>';
+    iconBg    = 'rgba(29,78,216,.1)';
+    iconBorder = '2px solid rgba(29,78,216,.22)';
+    titleText = 'Mark as Delivered';
+    msgText   = `Mark RIS #${id} as Delivered? This will update medicine stock quantities and complete the request.`;
+    btnText   = 'Mark Delivered';
     btnCls    = 'btn-modal-approve';
   } else if (isDelete) {
     iconHtml  = '<i class="bi bi-trash-fill" style="font-size:2.1rem;color:#c0392b;"></i>';
@@ -304,8 +333,11 @@ async function executeConfirm() {
     closeConfirmModal();
 
     if (res.ok) {
-      const label = action === 'approve' ? 'Approved' : action === 'delete' ? 'Deleted' : 'Rejected';
-      const type  = action === 'approve' ? 's' : 'w';
+      const label = action === 'approve'  ? 'Approved'
+                  : action === 'deliver'  ? 'Delivered'
+                  : action === 'delete'   ? 'Deleted'
+                  : 'Rejected';
+      const type  = (action === 'approve' || action === 'deliver') ? 's' : 'w';
       showToast(`RIS ${label}`, `RIS #${id} has been ${label.toLowerCase()}.`, type);
       await loadRIS();
     } else {

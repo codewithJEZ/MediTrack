@@ -57,13 +57,16 @@ router.post('/', (req, res) => {
     })();
     const created = db.prepare(`SELECT * FROM ris_requests WHERE id = ?`).get(result);
     const createdItems = db.prepare(`
-      SELECT ri.id, ri.ris_id, ri.medicine_id, ri.quantity, ri.note,
-             COALESCE(ri.unit, m.unit) AS unit,
-             m.name AS medicine_name
+      SELECT ri.medicine_id,
+             m.name AS medicine_name,
+             m.unit AS unit,
+             SUM(ri.quantity) AS quantity,
+             GROUP_CONCAT(ri.note, ', ') AS note
       FROM ris_items ri
-      LEFT JOIN medicines m ON m.id = ri.medicine_id
+      JOIN medicines m ON ri.medicine_id = m.id
       WHERE ri.ris_id = ?
-    `).all(result);
+      GROUP BY ri.medicine_id
+`).all(result);
     res.status(201).json({ ...created, items: createdItems });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -74,13 +77,16 @@ router.get('/', (req, res) => {
   try {
     const rows = db.prepare(`SELECT * FROM ris_requests ORDER BY id DESC`).all();
     const itemsStmt = db.prepare(`
-      SELECT ri.id, ri.ris_id, ri.medicine_id, ri.quantity, ri.note,
-             COALESCE(ri.unit, m.unit) AS unit,
-             m.name AS medicine_name
+      SELECT ri.medicine_id,
+             m.name AS medicine_name,
+             m.unit AS unit,
+             SUM(ri.quantity) AS quantity,
+             GROUP_CONCAT(ri.note, ', ') AS note
       FROM ris_items ri
-      LEFT JOIN medicines m ON m.id = ri.medicine_id
+      JOIN medicines m ON ri.medicine_id = m.id
       WHERE ri.ris_id = ?
-    `);
+      GROUP BY ri.medicine_id
+`);
     const result = rows.map(r => ({ ...r, items: itemsStmt.all(r.id) }));
     res.json(result);
   } catch (err) {
@@ -93,13 +99,16 @@ router.get('/:id', (req, res) => {
     const row = db.prepare(`SELECT * FROM ris_requests WHERE id = ?`).get(req.params.id);
     if (!row) return res.status(404).json({ error: 'RIS not found.' });
     const items = db.prepare(`
-      SELECT ri.id, ri.ris_id, ri.medicine_id, ri.quantity, ri.note,
-             COALESCE(ri.unit, m.unit) AS unit,
-             m.name AS medicine_name
+      SELECT ri.medicine_id,
+             m.name AS medicine_name,
+             m.unit AS unit,
+             SUM(ri.quantity) AS quantity,
+             GROUP_CONCAT(ri.note, ', ') AS note
       FROM ris_items ri
-      LEFT JOIN medicines m ON m.id = ri.medicine_id
+      JOIN medicines m ON ri.medicine_id = m.id
       WHERE ri.ris_id = ?
-    `).all(row.id);
+      GROUP BY ri.medicine_id
+`).all(row.id);
     res.json({ ...row, items });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -113,6 +122,23 @@ router.put('/:id/approve', (req, res) => {
     if (ris.status !== 'pending') {
       return res.status(400).json({ error: `RIS is already ${ris.status}.` });
     }
+    db.prepare(`UPDATE ris_requests SET status = 'approved_for_purchase' WHERE id = ?`).run(ris.id);
+    res.json({ ...ris, status: 'approved_for_purchase' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/:id/deliver', (req, res) => {
+  try {
+    const ris = db.prepare(`SELECT * FROM ris_requests WHERE id = ?`).get(req.params.id);
+    if (!ris) return res.status(404).json({ error: 'RIS not found.' });
+    if (ris.status === 'completed') {
+      return res.status(400).json({ error: 'RIS has already been delivered.' });
+    }
+    if (ris.status !== 'approved_for_purchase') {
+      return res.status(400).json({ error: `RIS cannot be delivered. Current status: ${ris.status}.` });
+    }
     const items = db.prepare(`SELECT * FROM ris_items WHERE ris_id = ?`).all(ris.id);
     db.transaction(() => {
       for (const item of items) {
@@ -121,9 +147,9 @@ router.put('/:id/approve', (req, res) => {
           `INSERT INTO transactions (medicine_id, type, quantity, notes) VALUES (?, 'in', ?, ?)`
         ).run(item.medicine_id, item.quantity, `Restock via RIS #${ris.id}`);
       }
-      db.prepare(`UPDATE ris_requests SET status = 'approved' WHERE id = ?`).run(ris.id);
+      db.prepare(`UPDATE ris_requests SET status = 'completed' WHERE id = ?`).run(ris.id);
     })();
-    res.json({ ...ris, status: 'approved' });
+    res.json({ ...ris, status: 'completed' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -148,9 +174,6 @@ router.delete('/:id', (req, res) => {
   try {
     const ris = db.prepare(`SELECT * FROM ris_requests WHERE id = ?`).get(req.params.id);
     if (!ris) return res.status(404).json({ error: 'RIS not found.' });
-    if (ris.status !== 'pending') {
-      return res.status(400).json({ error: `Cannot delete an ${ris.status} RIS.` });
-    }
     db.transaction(() => {
       db.prepare(`DELETE FROM ris_items WHERE ris_id = ?`).run(ris.id);
       db.prepare(`DELETE FROM ris_requests WHERE id = ?`).run(ris.id);

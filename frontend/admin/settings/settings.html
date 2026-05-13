@@ -172,14 +172,15 @@
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar" id="sidebarAvatarInitial">A</div>
+        <div class="sidebar-avatar user-avatar"></div>
         <div class="sidebar-user-info">
-          <strong id="sidebarUserName">Admin User</strong>
-          <small>System Administrator</small>
+          <span class="user-name"></span>
+          <span class="user-role"></span>
         </div>
       </div>
-      <button class="btn-sidebar-logout" id="btnLogout">
-        <i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Logout</span>
+      <button class="btn-sidebar-logout logout-btn" type="button">
+        <i class="bi bi-box-arrow-right nav-icon"></i>
+        <span class="nav-label">Logout</span>
       </button>
     </div>
   </aside>
@@ -193,18 +194,11 @@
       </div>
     </div>
     <div class="navbar-right">
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search medicines…" />
-      </div>
-      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
-      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
-      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
       <div class="navbar-user" tabindex="0">
-        <div class="user-avatar-nav" id="navAvatarInitial">AD</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav" id="navUserName">Admin User</span>
-          <span class="user-role-nav">Administrator</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
@@ -223,9 +217,9 @@
     <div class="settings-grid au d2">
 
       <div class="profile-card">
-        <div class="profile-avatar-lg" id="profileAvatarLg">A</div>
-        <div class="profile-name" id="profileDisplayName">Admin User</div>
-        <div class="profile-role">System Administrator</div>
+        <div class="profile-avatar-lg user-avatar" id="profileAvatarLg"></div>
+        <div class="profile-name user-name" id="profileDisplayName"></div>
+        <div class="profile-role user-role" id="profileDisplayRole"></div>
         <div class="profile-stat-row">
           <div class="profile-stat">
             <div class="profile-stat-val">12</div>
@@ -259,7 +253,7 @@
           </div>
           <div class="form-row">
             <label class="form-label" for="inputRole">Role</label>
-            <input type="text" class="form-input" id="inputRole" value="System Administrator" disabled />
+            <input type="text" class="form-input user-role" id="inputRole" disabled />
             <span class="form-hint">Role cannot be changed from this panel.</span>
           </div>
           <div style="margin-top:8px;">
@@ -338,28 +332,25 @@
 
 <div class="toast-stack" id="toastStack"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
 <script>
-const storedUser = localStorage.getItem('admin') || 'Admin User';
-const initials   = storedUser.slice(0,2).toUpperCase();
+const storedUserData = JSON.parse(localStorage.getItem('user') || 'null');
+const storedUser = storedUserData ? (storedUserData.username || storedUserData.name || 'User') : 'User';
+const storedRole = storedUserData ? (storedUserData.role || '') : '';
 
-document.getElementById('sidebarUserName').textContent     = storedUser;
-document.getElementById('sidebarAvatarInitial').textContent = storedUser.charAt(0).toUpperCase();
-document.getElementById('navUserName').textContent         = storedUser;
-document.getElementById('navAvatarInitial').textContent    = initials;
-document.getElementById('profileDisplayName').textContent  = storedUser;
-document.getElementById('profileAvatarLg').textContent    = storedUser.charAt(0).toUpperCase();
-document.getElementById('inputDisplayName').value         = storedUser;
+document.getElementById('profileDisplayName').textContent = storedUser;
+document.getElementById('profileAvatarLg').textContent   = storedUser.charAt(0).toUpperCase();
+document.getElementById('inputDisplayName').value        = storedUser;
+document.getElementById('profileDisplayRole').textContent = storedRole;
+document.getElementById('inputRole').value               = storedRole;
 
 document.getElementById('btnSaveProfile').addEventListener('click', () => {
   const name = document.getElementById('inputDisplayName').value.trim();
   if (!name) { showToast('Error', 'Display name cannot be empty.', 'e'); return; }
-  localStorage.setItem('admin', name);
-  document.getElementById('sidebarUserName').textContent     = name;
-  document.getElementById('sidebarAvatarInitial').textContent = name.charAt(0).toUpperCase();
-  document.getElementById('navUserName').textContent         = name;
-  document.getElementById('navAvatarInitial').textContent    = name.slice(0,2).toUpperCase();
-  document.getElementById('profileDisplayName').textContent  = name;
-  document.getElementById('profileAvatarLg').textContent    = name.charAt(0).toUpperCase();
+  const userData = JSON.parse(localStorage.getItem('user')) || {};
+  userData.name = name;
+  localStorage.setItem('user', JSON.stringify(userData));
+  loadUserInfo(userData);
   showToast('Profile Saved', 'Your profile has been updated successfully.', 's');
 });
 
@@ -392,10 +383,6 @@ const overlay = document.getElementById('sidebarOverlay');
 document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 
-document.getElementById('btnLogout').addEventListener('click', () => {
-  localStorage.removeItem('admin');
-  window.location.href = '../../index.html';
-});
 
 function showToast(title, msg, type = 's') {
   const icons = { s:'bi-check-circle-fill', w:'bi-exclamation-circle-fill', e:'bi-x-circle-fill' };

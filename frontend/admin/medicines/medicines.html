@@ -12,97 +12,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../main.css" />
   <style>
-    /* ── Page-level extras ── */
-    .page-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 14px; flex-wrap: wrap;
-      margin-bottom: 22px;
-    }
-    .toolbar-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-    .page-search {
-      position: relative; display: flex; align-items: center;
-    }
-    .page-search input {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px 10px 38px;
-      font-size: .88rem;
-      font-family: 'Nunito', sans-serif;
-      color: var(--text-1);
-      width: 240px;
-      outline: none;
-      transition: var(--transition);
-    }
-    .page-search input:focus {
-      border-color: var(--maroon);
-      box-shadow: 0 0 0 3px var(--maroon-glow);
-      width: 280px;
-    }
-    .page-search .bi {
-      position: absolute; left: 12px;
-      color: var(--text-3); font-size: .9rem;
-      pointer-events: none;
-    }
-
-    .filter-select {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: .88rem;
-      font-family: 'Nunito', sans-serif;
-      color: var(--text-2);
-      outline: none;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .filter-select:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
-
-    .btn-primary-mt {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%);
-      color: var(--white);
-      border-radius: 10px;
-      font-size: .9rem;
-      font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      box-shadow: 0 4px 14px rgba(123,29,30,.28);
-      transition: var(--transition);
-      white-space: nowrap;
-    }
-    .btn-primary-mt:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 22px rgba(123,29,30,.36);
-      color: var(--white);
-    }
-    .btn-primary-mt:active { transform: none; }
-
-    .btn-secondary-mt {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px;
-      background: var(--surface);
-      color: var(--text-2);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      font-size: .9rem;
-      font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      transition: var(--transition);
-      white-space: nowrap;
-      cursor: pointer;
-    }
-    .btn-secondary-mt:hover {
-      background: var(--bg);
-      border-color: var(--maroon);
-      color: var(--maroon);
-      transform: translateY(-1px);
-    }
-    .btn-secondary-mt:active { transform: none; }
-
     .cat-list { list-style: none; padding: 0; margin: 0; max-height: 260px; overflow-y: auto; }
     .cat-list-item {
       display: flex; align-items: center; justify-content: space-between;
@@ -135,49 +44,6 @@
     .cat-empty { text-align: center; padding: 28px 0; color: var(--text-3); font-size: .85rem; }
     .cat-empty i { font-size: 1.8rem; display: block; margin-bottom: 8px; }
 
-    /* Table action buttons */
-    .btn-tbl {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: .78rem;
-      font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      transition: var(--transition);
-      cursor: pointer;
-      border: none;
-    }
-    .btn-use {
-      background: var(--maroon);
-      color: var(--white);
-      box-shadow: 0 2px 8px rgba(123,29,30,.22);
-    }
-    .btn-use:hover { background: var(--maroon-dark); transform: translateY(-1px); }
-    .btn-view {
-      background: var(--bg);
-      color: var(--text-2);
-      border: 1.5px solid var(--border);
-    }
-    .btn-view:hover { background: var(--border-light); color: #1a6fc4; border-color: #1a6fc4; }
-    .btn-edit {
-      background: var(--bg);
-      color: var(--text-2);
-      border: 1.5px solid var(--border);
-    }
-    .btn-edit:hover { background: var(--border-light); color: var(--maroon); border-color: var(--maroon); }
-    .btn-restock {
-      background: rgba(22,163,74,.1);
-      color: #15803d;
-      border: 1.5px solid rgba(22,163,74,.22);
-    }
-    .btn-restock:hover { background: #16a34a; color: var(--white); border-color: #16a34a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,163,74,.32); }
-    .btn-del {
-      background: rgba(192,57,43,.1);
-      color: #c0392b;
-      border: 1.5px solid rgba(192,57,43,.22);
-    }
-    .btn-del:hover { background: #c0392b; color: var(--white); border-color: #c0392b; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,57,43,.32); }
-
     /* Status pills */
     .status-ok       { background: var(--green-bg);     color: var(--green);       }
     .status-expiring { background: var(--yellow-pale);  color: var(--yellow-dark); }
@@ -185,33 +51,6 @@
     .status-expired  { background: rgba(183,28,28,.12); color: #b71c1c;            }
     .status-dot      { width:6px; height:6px; border-radius:50%; display:inline-block; margin-right:4px; flex-shrink:0; }
 
-    /* Modal */
-    .mt-modal-overlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(10,10,20,.55);
-      backdrop-filter: blur(4px);
-      z-index: 2000;
-      align-items: center; justify-content: center;
-    }
-    .mt-modal-overlay.show { display: flex; }
-    .mt-modal {
-      background: var(--surface);
-      border-radius: var(--radius);
-      padding: 32px 28px;
-      width: 100%; max-width: 420px;
-      margin: 16px;
-      box-shadow: var(--shadow-lg);
-      animation: fadeUp .32s cubic-bezier(.34,1.2,.64,1);
-    }
-    .mt-modal h2 {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: var(--text-1);
-      margin-bottom: 4px;
-    }
-    .mt-modal .modal-sub { font-size: .82rem; color: var(--text-3); margin-bottom: 24px; }
     .modal-qty-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
     .btn-qty {
       padding: 16px;
@@ -247,34 +86,6 @@
       transition: var(--transition);
     }
     .modal-custom-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
-    .modal-actions { display: flex; gap: 10px; }
-    .btn-modal-cancel {
-      flex: 1; padding: 12px;
-      background: var(--bg); color: var(--text-2);
-      border: 1.5px solid var(--border);
-      border-radius: 10px; font-size: .9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer; transition: var(--transition);
-    }
-    .btn-modal-cancel:hover { background: var(--border-light); }
-    .btn-modal-confirm {
-      flex: 1; padding: 12px;
-      background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
-      color: var(--white); border: none;
-      border-radius: 10px; font-size: .9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer; transition: var(--transition);
-      box-shadow: 0 4px 14px rgba(123,29,30,.25);
-    }
-    .btn-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(123,29,30,.35); }
-    .btn-modal-danger {
-      flex: 1; padding: 12px;
-      background: linear-gradient(135deg, #c0392b, #e74c3c);
-      color: var(--white); border: none;
-      border-radius: 10px; font-size: .9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif; cursor: pointer; transition: var(--transition);
-      box-shadow: 0 4px 14px rgba(192,57,43,.3);
-    }
-    .btn-modal-danger:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(192,57,43,.42); }
-
     .use-label {
       display: block;
       font-size: .82rem;
@@ -427,24 +238,6 @@
       .view-med-field { grid-column: auto !important; }
     }
 
-    /* Empty state */
-    .empty-state {
-      text-align: center; padding: 60px 20px;
-      color: var(--text-3); display: none;
-    }
-    .empty-state i { font-size: 3rem; margin-bottom: 12px; display: block; }
-    .empty-state p { font-size: .9rem; }
-
-    @media (max-width: 768px) {
-      .page-search input { width: 180px; }
-      .page-search input:focus { width: 180px; }
-      .toolbar-left, .toolbar-right { width: 100%; }
-      .page-toolbar { flex-direction: column; align-items: stretch; }
-      .toolbar-right { justify-content: flex-end; }
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
     @media (max-width: 480px) {
       .medi-table th:nth-child(4),
       .medi-table td:nth-child(4) { display: none; }
@@ -487,13 +280,13 @@
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar">A</div>
+        <div class="sidebar-avatar user-avatar"></div>
         <div class="sidebar-user-info">
-          <strong>Admin User</strong>
-          <small>System Administrator</small>
+          <span class="user-name"></span>
+          <span class="user-role"></span>
         </div>
       </div>
-      <button class="btn-sidebar-logout" id="btnLogout">
+      <button class="btn-sidebar-logout logout-btn" type="button">
         <i class="bi bi-box-arrow-right nav-icon"></i>
         <span class="nav-label">Logout</span>
       </button>
@@ -510,18 +303,11 @@
       </div>
     </div>
     <div class="navbar-right">
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search medicines…" aria-label="Search" />
-      </div>
-      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
-      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
-      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
       <div class="navbar-user" tabindex="0">
-        <div class="user-avatar-nav">AD</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav">Admin User</span>
-          <span class="user-role-nav">Administrator</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
@@ -843,6 +629,10 @@
           <option value="Drops">Drops</option>
         </select>
       </div>
+      <div class="form-group" id="medQuantityGroup" style="margin-bottom:14px;">
+        <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Initial Quantity</label>
+        <input type="number" id="medQuantity" class="modal-custom-input" min="0" required placeholder="e.g. 100" style="width:100%;" />
+      </div>
       <div class="form-group" style="margin-bottom:14px;">
         <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2);margin-bottom:5px;">Unit</label>
         <select id="unit" class="modal-custom-input" style="width:100%;">
@@ -872,6 +662,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="medicines.js"></script>
 </body>

@@ -12,6 +12,7 @@ const transactionsRouter = require('./routes/transactions');
 const usersRouter = require('./routes/users');
 const settingsRouter = require('./routes/settings');
 const risRouter = require('./routes/ris');
+const reportsRouter = require('./routes/reports');
 
 app.get('/', (req, res) => {
   res.json({ message: 'MediTrack API running' });
@@ -24,6 +25,7 @@ app.use('/api/transactions', transactionsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/ris', risRouter);
+app.use('/api/reports', reportsRouter);
 
 app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' });

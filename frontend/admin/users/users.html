@@ -12,59 +12,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../main.css" />
   <style>
-    .page-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 14px; flex-wrap: wrap; margin-bottom: 22px;
-    }
-    .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-    .page-search {
-      position: relative; display: flex; align-items: center;
-    }
-    .page-search input {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px 10px 38px;
-      font-size: .88rem;
-      font-family: 'Nunito', sans-serif;
-      color: var(--text-1);
-      width: 230px; outline: none;
-      transition: var(--transition);
-    }
-    .page-search input:focus {
-      border-color: var(--maroon);
-      box-shadow: 0 0 0 3px var(--maroon-glow);
-      width: 270px;
-    }
-    .page-search .bi { position: absolute; left: 12px; color: var(--text-3); font-size: .9rem; pointer-events: none; }
-
-    .filter-select {
-      background: var(--surface);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: .88rem;
-      font-family: 'Nunito', sans-serif;
-      color: var(--text-2);
-      outline: none; cursor: pointer;
-      transition: var(--transition);
-    }
-    .filter-select:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
-
-    .btn-primary-mt {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 10px 20px;
-      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%);
-      color: var(--white); border-radius: 10px;
-      font-size: .9rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      box-shadow: 0 4px 14px rgba(123,29,30,.28);
-      transition: var(--transition); white-space: nowrap;
-    }
-    .btn-primary-mt:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(123,29,30,.36); color: var(--white); }
-
     /* User avatar in table */
     .user-cell { display: flex; align-items: center; gap: 12px; }
     .user-tbl-avatar {
@@ -96,19 +43,6 @@
     .status-active   { background: var(--green-bg); color: var(--green); }
     .status-inactive { background: var(--border-light); color: var(--text-3); }
 
-    /* Action buttons */
-    .btn-tbl {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 12px; border-radius: 8px;
-      font-size: .78rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      transition: var(--transition); cursor: pointer; border: none;
-    }
-    .btn-edit { background: var(--bg); color: var(--text-2); border: 1.5px solid var(--border); }
-    .btn-edit:hover { background: var(--border-light); color: var(--maroon); border-color: var(--maroon); }
-    .btn-del  { background: var(--red-bg); color: var(--red); }
-    .btn-del:hover  { background: var(--red); color: var(--white); }
-
     /* User summary strip */
     .user-summary {
       display: grid; grid-template-columns: repeat(3, 1fr);
@@ -133,21 +67,7 @@
     }
     .usr-sum-lbl { font-size: .78rem; font-weight: 600; color: var(--text-3); margin-top: 3px; }
 
-    /* Modal */
-    .mt-modal-overlay {
-      display: none; position: fixed; inset: 0;
-      background: rgba(10,10,20,.55);
-      backdrop-filter: blur(4px); z-index: 2000;
-      align-items: center; justify-content: center;
-    }
-    .mt-modal-overlay.show { display: flex; }
-    .mt-modal {
-      background: var(--surface); border-radius: var(--radius);
-      padding: 32px 28px; width: 100%; max-width: 440px; margin: 16px;
-      box-shadow: var(--shadow-lg);
-      animation: fadeUp .32s cubic-bezier(.34,1.2,.64,1);
-    }
-    .mt-modal h2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.15rem; font-weight: 800; color: var(--text-1); margin-bottom: 20px; }
+    .mt-modal h2 { margin-bottom: 20px; }
     .form-group { margin-bottom: 14px; }
     .form-group label { display: block; font-size: .82rem; font-weight: 700; color: var(--text-2); margin-bottom: 5px; }
     .form-group input, .form-group select {
@@ -159,35 +79,8 @@
       outline: none; transition: var(--transition);
     }
     .form-group input:focus, .form-group select:focus { border-color: var(--maroon); background: var(--white); box-shadow: 0 0 0 3px var(--maroon-glow); }
-    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-    .btn-modal-cancel {
-      flex: 1; padding: 12px; background: var(--bg); color: var(--text-2);
-      border: 1.5px solid var(--border); border-radius: 10px;
-      font-size: .9rem; font-weight: 700; font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: var(--transition);
-    }
-    .btn-modal-cancel:hover { background: var(--border-light); }
-    .btn-modal-confirm {
-      flex: 1; padding: 12px;
-      background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
-      color: var(--white); border: none; border-radius: 10px;
-      font-size: .9rem; font-weight: 700; font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: var(--transition);
-      box-shadow: 0 4px 14px rgba(123,29,30,.25);
-    }
-    .btn-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 7px 20px rgba(123,29,30,.35); }
-    .btn-modal-danger {
-      flex: 1; padding: 12px;
-      background: var(--red); color: var(--white);
-      border: none; border-radius: 10px;
-      font-size: .9rem; font-weight: 700; font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: var(--transition);
-    }
-    .btn-modal-danger:hover { opacity: .88; transform: translateY(-1px); }
-
     @media (max-width: 768px) {
       .user-summary { grid-template-columns: 1fr 1fr; }
-      .page-toolbar { flex-direction: column; align-items: stretch; }
       .medi-table th:nth-child(5),
       .medi-table td:nth-child(5) { display: none; }
     }
@@ -234,14 +127,15 @@
     </nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar">A</div>
+        <div class="sidebar-avatar user-avatar"></div>
         <div class="sidebar-user-info">
-          <strong>Admin User</strong>
-          <small>System Administrator</small>
+          <span class="user-name"></span>
+          <span class="user-role"></span>
         </div>
       </div>
-      <button class="btn-sidebar-logout" id="btnLogout">
-        <i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Logout</span>
+      <button class="btn-sidebar-logout logout-btn" type="button">
+        <i class="bi bi-box-arrow-right nav-icon"></i>
+        <span class="nav-label">Logout</span>
       </button>
     </div>
   </aside>
@@ -256,18 +150,11 @@
       </div>
     </div>
     <div class="navbar-right">
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search medicines…" />
-      </div>
-      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
-      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
-      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
       <div class="navbar-user" tabindex="0">
-        <div class="user-avatar-nav">AD</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav">Admin User</span>
-          <span class="user-role-nav">Administrator</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
@@ -417,6 +304,7 @@
 
 <div class="toast-stack" id="toastStack"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
 <script src="users.js"></script>
 </body>
 </html>

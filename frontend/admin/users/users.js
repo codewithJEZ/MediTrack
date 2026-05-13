@@ -4,9 +4,6 @@ let USERS = [];
 let editUserId = null;
 let deleteUserId = null;
 
-const storedUser = JSON.parse(localStorage.getItem('user'));
-const userName = storedUser ? storedUser.name : 'Admin User';
-document.getElementById('sidebarUserName') && (document.getElementById('sidebarUserName').textContent = userName);
 
 function getInitials(name) {
   return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -161,10 +158,6 @@ const overlay = document.getElementById('sidebarOverlay');
 document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
 overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 
-document.getElementById('btnLogout').addEventListener('click', () => {
-  localStorage.removeItem('user');
-  window.location.href = '../../index.html';
-});
 
 function showToast(title, msg, type = 's') {
   const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };

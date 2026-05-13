@@ -19,17 +19,69 @@
     }
     .report-summary {
       display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 16px; margin-bottom: 24px;
+      gap: 20px; margin-bottom: 24px;
     }
     .rpt-card {
-      background: var(--surface); border: 1px solid var(--border-light);
-      border-radius: var(--radius-sm); padding: 18px 20px;
-      box-shadow: var(--shadow-sm); text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-left: 4px solid transparent;
+      border-radius: var(--radius-sm);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
-    .rpt-card-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--text-1); line-height: 1; }
-    .rpt-card-lbl { font-size: .76rem; font-weight: 700; color: var(--text-3); margin-top: 5px; text-transform: uppercase; letter-spacing: .5px; }
-    .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px; }
+    .rpt-card-icon {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem;
+      flex-shrink: 0;
+    }
+    .rpt-card-body small {
+      display: block;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 4px;
+    }
+    .rpt-card-body h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      line-height: 1;
+      margin: 0;
+    }
+    .rpt-card--blue   { border-left-color: #2563eb; }
+    .rpt-card--blue   .rpt-card-icon { background: rgba(37,99,235,.1); color: #2563eb; }
+    .rpt-card--blue   .rpt-card-body h2 { color: #2563eb; }
+    .rpt-card--green  { border-left-color: #16a34a; }
+    .rpt-card--green  .rpt-card-icon { background: rgba(22,163,74,.1); color: #16a34a; }
+    .rpt-card--green  .rpt-card-body h2 { color: #16a34a; }
+    .rpt-card--orange { border-left-color: #ea580c; }
+    .rpt-card--orange .rpt-card-icon { background: rgba(234,88,12,.1); color: #ea580c; }
+    .rpt-card--orange .rpt-card-body h2 { color: #ea580c; }
+    .rpt-card--red    { border-left-color: #dc2626; }
+    .rpt-card--red    .rpt-card-icon { background: rgba(220,38,38,.1); color: #dc2626; }
+    .rpt-card--red    .rpt-card-body h2 { color: #dc2626; }
+    .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 22px; }
     .charts-1col { margin-bottom: 22px; }
+    .chart-card { padding: 22px 24px; }
+    .chart-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px;
+      margin-bottom: 18px; padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .chart-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      color: var(--text-1); margin: 0 0 3px;
+    }
+    .chart-sub { font-size: .78rem; color: var(--text-3); margin: 0; }
     @media (max-width: 1100px) {
       .report-summary { grid-template-columns: repeat(2, 1fr); }
       .charts-2col    { grid-template-columns: 1fr; }
@@ -125,30 +177,42 @@
     </div>
 
     <div class="report-summary au d2">
-      <div class="rpt-card">
-        <div class="rpt-card-val" style="color:var(--maroon);" id="rptTotalMeds">—</div>
-        <div class="rpt-card-lbl">Total Medicines</div>
+      <div class="rpt-card rpt-card--blue">
+        <div class="rpt-card-icon"><i class="bi bi-capsule-pill"></i></div>
+        <div class="rpt-card-body">
+          <small>Total Medicines</small>
+          <h2 id="rptTotalMeds">—</h2>
+        </div>
       </div>
-      <div class="rpt-card">
-        <div class="rpt-card-val" style="color:var(--green);" id="rptTotalTxn">—</div>
-        <div class="rpt-card-lbl">Total Transactions</div>
+      <div class="rpt-card rpt-card--green">
+        <div class="rpt-card-icon"><i class="bi bi-arrow-left-right"></i></div>
+        <div class="rpt-card-body">
+          <small>Total Transactions</small>
+          <h2 id="rptTotalTxn">—</h2>
+        </div>
       </div>
-      <div class="rpt-card">
-        <div class="rpt-card-val" style="color:var(--red);" id="rptLowStock">—</div>
-        <div class="rpt-card-lbl">Low Stock Items</div>
+      <div class="rpt-card rpt-card--orange">
+        <div class="rpt-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="rpt-card-body">
+          <small>Low Stock Items</small>
+          <h2 id="rptLowStock">—</h2>
+        </div>
       </div>
-      <div class="rpt-card">
-        <div class="rpt-card-val" style="color:var(--yellow-dark);" id="rptExpiring">—</div>
-        <div class="rpt-card-lbl">Expiring Soon</div>
+      <div class="rpt-card rpt-card--red">
+        <div class="rpt-card-icon"><i class="bi bi-clock-fill"></i></div>
+        <div class="rpt-card-body">
+          <small>Expiring Soon</small>
+          <h2 id="rptExpiring">—</h2>
+        </div>
       </div>
     </div>
 
     <div class="charts-1col au d3">
-      <div class="card-panel">
-        <div class="panel-header">
+      <div class="card-panel chart-card">
+        <div class="chart-header">
           <div>
-            <h3>Monthly Medicine Usage</h3>
-            <p>Dispensed vs Restocked — Jan to Jun 2025</p>
+            <h3 class="chart-title">Monthly Usage</h3>
+            <p class="chart-sub">Dispensed vs Restocked — Jan to Jun 2025</p>
           </div>
           <div class="chart-legend">
             <span class="leg-item"><span class="leg-dot" style="background:#7B1D1E;"></span>Dispensed</span>
@@ -162,22 +226,22 @@
     </div>
 
     <div class="charts-2col au d4">
-      <div class="card-panel">
-        <div class="panel-header">
+      <div class="card-panel chart-card">
+        <div class="chart-header">
           <div>
-            <h3>Current Stock Levels</h3>
-            <p>Top medicines by quantity on hand</p>
+            <h3 class="chart-title">Current Stock Levels</h3>
+            <p class="chart-sub">Top medicines by quantity on hand</p>
           </div>
         </div>
         <div class="chart-wrap" style="height:280px;">
           <canvas id="stockChart"></canvas>
         </div>
       </div>
-      <div class="card-panel">
-        <div class="panel-header">
+      <div class="card-panel chart-card">
+        <div class="chart-header">
           <div>
-            <h3>Stock by Category</h3>
-            <p>Breakdown by medicine type</p>
+            <h3 class="chart-title">Stock by Category</h3>
+            <p class="chart-sub">Breakdown by medicine type</p>
           </div>
         </div>
         <div class="chart-wrap" style="height:200px;">
@@ -204,7 +268,7 @@ document.getElementById('navAvatarInitial').textContent = userName.slice(0,2).to
 Chart.defaults.font.family = "'Nunito', sans-serif";
 Chart.defaults.color = '#8d93b0';
 
-new Chart(document.getElementById('usageChart'), {
+const usageChart = new Chart(document.getElementById('usageChart'), {
   type: 'bar',
   data: {
     labels: ['January','February','March','April','May','June'],
@@ -245,21 +309,35 @@ const catDonut = new Chart(document.getElementById('categoryDonut'), {
 const COLORS = ['#7B1D1E','#dc2626','#16a34a','#2563eb','#ea580c','#F6AC02','#8d93b0','#7c3aed'];
 
 async function loadReports() {
-  const [medsRes, txRes, catsRes] = await Promise.all([
-    fetch(`${API}/medicines`), fetch(`${API}/transactions`), fetch(`${API}/categories`)
+  const [summaryRes, monthlyRes, medsRes, catsRes] = await Promise.all([
+    fetch(`${API}/reports/summary`),
+    fetch(`${API}/reports/monthly`),
+    fetch(`${API}/medicines`),
+    fetch(`${API}/categories`)
   ]);
-  const meds = await medsRes.json();
-  const txns = await txRes.json();
-  const cats = await catsRes.json();
 
-  const now = new Date();
-  const low = meds.filter(m => m.quantity <= 10).length;
-  const exp = meds.filter(m => m.expiration_date && (new Date(m.expiration_date) - now) / 86400000 <= 30).length;
+  const summary = await summaryRes.json();
+  const monthly = await monthlyRes.json();
+  const meds    = await medsRes.json();
+  const cats    = await catsRes.json();
 
-  document.getElementById('rptTotalMeds').textContent = meds.length;
-  document.getElementById('rptTotalTxn').textContent  = txns.length;
-  document.getElementById('rptLowStock').textContent  = low;
-  document.getElementById('rptExpiring').textContent  = exp;
+  document.getElementById('rptTotalMeds').textContent = summary.totalMedicines;
+  document.getElementById('rptTotalTxn').textContent  = summary.totalTransactions;
+  document.getElementById('rptLowStock').textContent  = summary.lowStock;
+  document.getElementById('rptExpiring').textContent  = summary.expiringSoon;
+
+  const dispensedData = new Array(6).fill(0);
+  const restockedData = new Array(6).fill(0);
+  monthly.forEach(row => {
+    const idx = parseInt(row.month.split('-')[1]) - 1;
+    if (idx >= 0 && idx < 6) {
+      dispensedData[idx] = row.stock_out;
+      restockedData[idx] = row.stock_in;
+    }
+  });
+  usageChart.data.datasets[0].data = dispensedData;
+  usageChart.data.datasets[1].data = restockedData;
+  usageChart.update();
 
   const top8 = [...meds].sort((a,b) => b.quantity - a.quantity).slice(0, 8);
   stockChart.data.labels = top8.map(m => m.name);

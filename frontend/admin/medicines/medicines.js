@@ -311,17 +311,23 @@ function editMedicine(id) {
   document.getElementById('unit').value            = m.unit || '';
   document.getElementById('expiration_date').value = m.expiration_date || '';
   document.getElementById('description').value     = m.description || '';
+  document.getElementById('medQuantityGroup').style.display = 'none';
+  document.getElementById('medQuantity').removeAttribute('required');
   document.getElementById('addMedModal').classList.add('show');
 }
 
 function openAddModal() {
   editId = null;
   document.getElementById('addForm').reset();
+  document.getElementById('medQuantityGroup').style.display = '';
+  document.getElementById('medQuantity').setAttribute('required', '');
   document.getElementById('addMedModal').classList.add('show');
 }
 function closeAddModal() {
   editId = null;
   document.getElementById('addMedModal').classList.remove('show');
+  document.getElementById('medQuantityGroup').style.display = '';
+  document.getElementById('medQuantity').setAttribute('required', '');
 }
 
 document.getElementById('btnAddMedicine').addEventListener('click', openAddModal);
@@ -397,6 +403,7 @@ async function loadMedicines() {
 async function init() {
   await loadCategories();
   await loadMedicines();
+  loadCart();
 }
 
 init();
@@ -404,6 +411,34 @@ init();
 // --- Restock Cart ---
 
 let restockList = [];
+
+function persistCart() {
+  localStorage.setItem('requestCart', JSON.stringify(
+    restockList.map(i => ({ id: i.id, name: i.name, unit: i.unit, qty: i.qty, note: i.note }))
+  ));
+  console.log('[Cart] Persisted', restockList.length, 'item(s) to localStorage');
+}
+
+function loadCart() {
+  const saved = JSON.parse(localStorage.getItem('requestCart') || '[]');
+  restockList = saved.map(item => {
+    const m = allMedicines.find(x => x.id === item.id);
+    return {
+      id:           item.id,
+      name:         item.name,
+      currentStock: m ? m.quantity : 0,
+      unit:         item.unit || (m ? m.unit || '' : ''),
+      dosage_form:  m ? m.dosage_form || '—' : '—',
+      strength:     m ? m.strength    || '—' : '—',
+      category_id:  m ? m.category_id : null,
+      suggestedQty: m ? (m.suggestedRestock > 0 ? m.suggestedRestock : 1) : 1,
+      qty:          item.qty  || 1,
+      note:         item.note || ''
+    };
+  });
+  updateRestockCartBadge();
+  console.log('[Cart] Loaded from localStorage:', restockList.length, 'item(s)');
+}
 
 function addToRestockCart(id) {
   const m = allMedicines.find(x => x.id === id);
@@ -426,22 +461,24 @@ function addToRestockCart(id) {
     qty:          m.suggestedRestock > 0 ? m.suggestedRestock : 1,
     note:         ''
   });
+  persistCart();
   updateRestockCartBadge();
   showToast('Added to Cart', `${m.name} added to the restock cart.`, 's');
 }
 
 function updateCartQty(id, val) {
   const item = restockList.find(x => x.id === id);
-  if (item) item.qty = Math.max(1, parseInt(val) || 1);
+  if (item) { item.qty = Math.max(1, parseInt(val) || 1); persistCart(); }
 }
 
 function updateCartNote(id, val) {
   const item = restockList.find(x => x.id === id);
-  if (item) item.note = (val || '').trim();
+  if (item) { item.note = (val || '').trim(); persistCart(); }
 }
 
 function removeFromRestockCart(id) {
   restockList = restockList.filter(x => x.id !== id);
+  persistCart();
   updateRestockCartBadge();
   renderRestockCart();
 }
@@ -552,6 +589,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
   const strength        = document.getElementById('strength').value.trim() || null;
   const category_id     = Number(document.getElementById('category_id').value) || null;
   const dosage_form     = document.getElementById('dosage_form').value;
+  const quantity        = Number(document.getElementById('medQuantity').value) || 0;
   const unit            = document.getElementById('unit').value || null;
   const expiration_date = document.getElementById('expiration_date').value || null;
   const description     = document.getElementById('description').value.trim() || null;
@@ -576,7 +614,7 @@ document.getElementById('addForm').addEventListener('submit', async (e) => {
       const res = await fetch(`${API}/medicines`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, category_id, dosage_form, strength, unit, expiration_date, description })
+        body: JSON.stringify({ name, category_id, dosage_form, strength, quantity, unit, expiration_date, description })
       });
       if (!res.ok) { const err = await res.json(); showToast('Error', err.error || 'Failed to add.', 'e'); return; }
       closeAddModal();
@@ -681,6 +719,7 @@ async function submitRequest() {
     }
 
     restockList = [];
+    persistCart();
     updateRestockCartBadge();
     closeRestockCart();
     showToast('Request Submitted', 'Request submitted successfully.', 's');

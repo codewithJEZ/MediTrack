@@ -12,6 +12,8 @@ db.exec(`
     category_id INTEGER,
     quantity INTEGER NOT NULL DEFAULT 0,
     unit TEXT,
+    dosage_form TEXT,
+    strength TEXT,
     expiration_date DATE,
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -48,8 +50,26 @@ db.exec(`
     value TEXT,
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
+
+  CREATE TABLE IF NOT EXISTS ris_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    requested_by TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS ris_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ris_id INTEGER NOT NULL,
+    medicine_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    FOREIGN KEY (ris_id) REFERENCES ris_requests(id),
+    FOREIGN KEY (medicine_id) REFERENCES medicines(id)
+  );
 `);
 
+try { db.exec('ALTER TABLE medicines ADD COLUMN dosage_form TEXT'); } catch (_) {}
+try { db.exec('ALTER TABLE medicines ADD COLUMN strength TEXT'); } catch (_) {}
 try { db.exec('ALTER TABLE transactions ADD COLUMN notes TEXT'); } catch (_) {}
 try { db.exec('ALTER TABLE transactions ADD COLUMN patient_name TEXT'); } catch (_) {}
 try { db.exec('ALTER TABLE transactions ADD COLUMN course TEXT'); } catch (_) {}

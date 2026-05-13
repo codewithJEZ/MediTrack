@@ -50,13 +50,9 @@ router.post('/', (req, res) => {
   const { medicine_id, type, quantity, notes, patient_name, course, section, illness, user_id } = req.body;
 
   const missing = [];
-  if (!medicine_id)                                  missing.push('medicine_id');
-  if (!type)                                         missing.push('type');
-  if (!quantity)                                     missing.push('quantity');
-  if (!patient_name || !String(patient_name).trim()) missing.push('patient_name');
-  if (!course       || !String(course).trim())       missing.push('course');
-  if (!section      || !String(section).trim())      missing.push('section');
-  if (!illness      || !String(illness).trim())      missing.push('illness');
+  if (!medicine_id) missing.push('medicine_id');
+  if (!type)        missing.push('type');
+  if (!quantity)    missing.push('quantity');
 
   if (missing.length) {
     return res.status(400).json({ error: `Missing required fields: ${missing.join(', ')}.` });
@@ -66,15 +62,30 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'type must be "in" or "out".' });
   }
 
+  if (type === 'in') {
+    return res.status(400).json({ error: 'Stock-in requires an approved RIS.' });
+  }
+
+  if (type === 'out') {
+    const dispMissing = [];
+    if (!patient_name || !String(patient_name).trim()) dispMissing.push('patient_name');
+    if (!course       || !String(course).trim())       dispMissing.push('course');
+    if (!section      || !String(section).trim())      dispMissing.push('section');
+    if (!illness      || !String(illness).trim())      dispMissing.push('illness');
+    if (dispMissing.length) {
+      return res.status(400).json({ error: `Missing required fields: ${dispMissing.join(', ')}.` });
+    }
+  }
+
   const qty = Number(quantity);
   if (!Number.isInteger(qty) || qty <= 0) {
     return res.status(400).json({ error: 'quantity must be a positive integer.' });
   }
 
-  const pName   = String(patient_name).trim();
-  const pCourse = String(course).trim();
-  const pSec    = String(section).trim();
-  const pIll    = String(illness).trim();
+  const pName   = patient_name ? String(patient_name).trim() : null;
+  const pCourse = course       ? String(course).trim()       : null;
+  const pSec    = section      ? String(section).trim()      : null;
+  const pIll    = illness      ? String(illness).trim()      : null;
   const uid     = user_id ? Number(user_id) : null;
 
   const now = Date.now();
@@ -116,11 +127,24 @@ router.post('/', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   try {
-    const existing = db.prepare('SELECT id FROM transactions WHERE id = ?').get(req.params.id);
-    if (!existing) return res.status(404).json({ error: 'Transaction not found.' });
+    const tx = db.prepare('SELECT id, medicine_id, type, quantity FROM transactions WHERE id = ?').get(req.params.id);
+    if (!tx) return res.status(404).json({ error: 'Transaction not found.' });
 
-    db.prepare('DELETE FROM transactions WHERE id = ?').run(req.params.id);
-    res.json({ success: true, message: 'Transaction deleted successfully.' });
+    const medicine = db.prepare('SELECT id, quantity FROM medicines WHERE id = ?').get(tx.medicine_id);
+    if (!medicine) return res.status(404).json({ error: 'Associated medicine not found.' });
+
+    const isIn   = (tx.type || '').toUpperCase() === 'IN';
+    const newQty = isIn ? medicine.quantity - tx.quantity : medicine.quantity + tx.quantity;
+    if (newQty < 0) {
+      return res.status(400).json({ error: 'Cannot delete: reverting this transaction would result in negative stock.' });
+    }
+
+    db.transaction(() => {
+      db.prepare('UPDATE medicines SET quantity = ? WHERE id = ?').run(newQty, tx.medicine_id);
+      db.prepare('DELETE FROM transactions WHERE id = ?').run(tx.id);
+    })();
+
+    res.json({ success: true, message: 'Transaction deleted and stock updated.' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete transaction.' });
   }

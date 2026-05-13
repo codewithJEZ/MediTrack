@@ -31,26 +31,37 @@ function renderTx(data) {
     const dt        = formatDate(t.created_at);
     const tm        = formatTime(t.created_at);
     const medName   = t.medicine_name || `ID ${t.medicine_id || '—'}`;
-    const patient   = t.patient_name  || '';
-    const course    = t.course        || '';
-    const section   = t.section       || '';
-    const illness   = t.illness       || '';
     const performer = t.performed_by  || '';
-    const infoLine  = [course, section].filter(Boolean).join(' · ');
+
+    let primaryLabel, secondaryLine, illnessCell;
+    if (isIn) {
+      primaryLabel  = `<span style="font-weight:700;color:#15803d;font-size:.88rem;">Restock</span>`;
+      secondaryLine = t.notes ? `<div style="font-size:.76rem;color:var(--text-3);margin-top:2px;">${t.notes}</div>` : '';
+      illnessCell   = `<span style="color:var(--text-3);font-size:.84rem;">—</span>`;
+    } else {
+      const patient  = t.patient_name || '';
+      const course   = t.course       || '';
+      const section  = t.section      || '';
+      const illness  = t.illness      || '';
+      const infoLine = [course, section].filter(Boolean).join(' · ');
+      primaryLabel  = `<div style="font-weight:700;color:var(--text-1);font-size:.88rem;">${patient || '—'}</div>`;
+      secondaryLine = infoLine ? `<div style="font-size:.76rem;color:var(--text-3);margin-top:2px;">${infoLine}</div>` : '';
+      illnessCell   = `<span style="color:var(--text-2);font-size:.84rem;">${illness || '—'}</span>`;
+    }
 
     return `
       <tr>
         <td>
-          <div style="font-weight:700;color:var(--text-1);font-size:.88rem;">${patient || '—'}</div>
-          ${infoLine ? `<div style="font-size:.76rem;color:var(--text-3);margin-top:2px;">${infoLine}</div>` : ''}
+          ${primaryLabel}
+          ${secondaryLine}
         </td>
-        <td style="color:var(--text-2);font-size:.84rem;">${illness || '—'}</td>
+        <td>${illnessCell}</td>
         <td><div class="td-medicine"><div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>${medName}</div></td>
         <td class="td-qty">${t.quantity != null ? t.quantity : '—'}</td>
         <td>
           <span class="pill ${isIn ? 'type-in' : 'type-out'}">
             <i class="bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}" style="margin-right:3px;"></i>
-            ${isIn ? 'Stock In' : 'Dispensed'}
+            ${isIn ? 'Restocked' : 'Dispensed'}
           </span>
         </td>
         <td class="td-date">
@@ -59,15 +70,62 @@ function renderTx(data) {
           ${performer ? `<div style="font-size:.72rem;color:var(--text-3);margin-top:3px;"><i class="bi bi-person-fill" style="margin-right:2px;"></i>${performer}</div>` : ''}
         </td>
         <td>
-          <button
-            class="btn-delete"
-            onclick="handleDeleteTransaction(${t.id})"
-            title="Delete transaction">
-            <i class="bi bi-trash"></i> Delete
-          </button>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-tbl btn-view" onclick="openViewTxModal(${t.id})"><i class="bi bi-eye"></i> View</button>
+            <button class="btn-tbl btn-delete" onclick="handleDeleteTransaction(${t.id})" title="Delete transaction"><i class="bi bi-trash"></i> Delete</button>
+          </div>
         </td>
       </tr>`;
   }).join('');
+}
+
+function openViewTxModal(id) {
+  const t = allTransactions.find(x => x.id === id);
+  if (!t) return;
+
+  const isIn = (t.type || '').toUpperCase() === 'IN';
+
+  const iconWrap = document.getElementById('viewTxIconWrap');
+  const icon     = document.getElementById('viewTxIcon');
+  iconWrap.style.background = isIn
+    ? 'linear-gradient(135deg,#16a34a,#22c55e)'
+    : 'linear-gradient(135deg,var(--maroon),var(--maroon-light))';
+  icon.className = `bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}`;
+
+  document.getElementById('viewTxTitle').textContent = isIn ? 'Restocked' : 'Dispensed';
+
+  const badge = document.getElementById('viewTxBadge');
+  badge.innerHTML = `<span class="pill ${isIn ? 'type-in' : 'type-out'}">
+    <i class="bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}" style="margin-right:3px;"></i>
+    ${isIn ? 'Restocked' : 'Dispensed'}
+  </span>`;
+
+  document.getElementById('vtxMedicine').textContent  = t.medicine_name || `ID ${t.medicine_id || '—'}`;
+  document.getElementById('vtxQuantity').textContent  = t.quantity != null ? t.quantity : '—';
+  document.getElementById('vtxDate').textContent      = `${formatDate(t.created_at)} ${formatTime(t.created_at)}`;
+  document.getElementById('vtxPerformer').textContent = t.performed_by || '—';
+
+  const show = id => document.getElementById(id).style.display = '';
+  const hide = id => document.getElementById(id).style.display = 'none';
+
+  if (isIn) {
+    hide('vtxPatientWrap'); hide('vtxCourseWrap'); hide('vtxSectionWrap'); hide('vtxIllnessWrap');
+    show('vtxNoteWrap');
+    document.getElementById('vtxNote').textContent = t.notes || '—';
+  } else {
+    show('vtxPatientWrap'); show('vtxCourseWrap'); show('vtxSectionWrap'); show('vtxIllnessWrap');
+    hide('vtxNoteWrap');
+    document.getElementById('vtxPatient').textContent  = t.patient_name || '—';
+    document.getElementById('vtxCourse').textContent   = t.course       || '—';
+    document.getElementById('vtxSection').textContent  = t.section      || '—';
+    document.getElementById('vtxIllness').textContent  = t.illness      || '—';
+  }
+
+  document.getElementById('viewTxModal').classList.add('show');
+}
+
+function closeViewTxModal() {
+  document.getElementById('viewTxModal').classList.remove('show');
 }
 
 function handleDeleteTransaction(id) {
@@ -122,8 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
-    const modal = document.getElementById('deleteTxModal');
-    if (modal && modal.classList.contains('show')) closeDeleteTxModal();
+    if (document.getElementById('viewTxModal').classList.contains('show'))   closeViewTxModal();
+    if (document.getElementById('deleteTxModal').classList.contains('show')) closeDeleteTxModal();
   }
 });
 
@@ -131,8 +189,9 @@ function applyFilters() {
   const q        = document.getElementById('searchInput').value.toLowerCase();
   const fromVal  = document.getElementById('dateFrom').value;
   const toVal    = document.getElementById('dateTo').value;
-  const fromDate = fromVal ? new Date(fromVal) : null;
+  const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
   const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
+  console.log('[applyFilters] fromDate:', fromDate, '| toDate:', toDate);
 
   const data = allTransactions.filter(t => {
     const med       = (t.medicine_name  || '').toLowerCase();
@@ -141,12 +200,14 @@ function applyFilters() {
     const section   = (t.section        || '').toLowerCase();
     const illness   = (t.illness        || '').toLowerCase();
     const performer = (t.performed_by   || '').toLowerCase();
-    const txDate    = t.created_at ? new Date(t.created_at) : null;
+    const txDate    = t.created_at ? new Date(t.created_at.replace(' ', 'T')) : null;
+    console.log('[applyFilters] txDate:', txDate, '| raw:', t.created_at);
     return (activeFilter === 'All' || (t.type || '').toUpperCase() === activeFilter) &&
            (!q || med.includes(q) || patient.includes(q) || course.includes(q) || section.includes(q) || illness.includes(q) || performer.includes(q)) &&
            (!fromDate || (txDate && txDate >= fromDate)) &&
            (!toDate   || (txDate && txDate <= toDate));
   });
+  console.log('[applyFilters] filtered results length:', data.length);
   renderTx(data);
 }
 
@@ -183,9 +244,22 @@ function showToast(title, msg, type = 's') {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
 }
 
+function buildTransactionQueryParams() {
+  const fromVal  = document.getElementById('dateFrom').value;
+  const toVal    = document.getElementById('dateTo').value;
+  const search   = document.getElementById('searchInput').value.trim();
+  const params   = new URLSearchParams();
+  if (fromVal) params.set('from', fromVal);
+  if (toVal)   params.set('to', toVal);
+  if (search)  params.set('search', search);
+  return params.toString();
+}
+
 async function loadTransactions() {
   try {
-    const res = await fetch(`${API}/transactions`);
+    const qs  = buildTransactionQueryParams();
+    const url = qs ? `${API}/transactions?${qs}` : `${API}/transactions`;
+    const res = await fetch(url);
     allTransactions = await res.json();
     computeSummary();
     applyFilters();

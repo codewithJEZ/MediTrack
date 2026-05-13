@@ -132,6 +132,46 @@
     }
     .btn-clear-date:hover { border-color: var(--maroon); color: var(--maroon); }
 
+    .btn-tbl {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: .78rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      transition: var(--transition);
+      cursor: pointer;
+      border: none;
+    }
+    .btn-view {
+      background: var(--bg);
+      color: var(--text-2);
+      border: 1.5px solid var(--border) !important;
+    }
+    .btn-view:hover { background: var(--border-light); color: #1a6fc4; border-color: #1a6fc4 !important; }
+    .btn-delete {
+      background: rgba(192,57,43,.1);
+      color: #c0392b;
+      border: 1.5px solid rgba(192,57,43,.22) !important;
+    }
+    .btn-delete:hover { background: #c0392b; color: var(--white); border-color: #c0392b !important; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(192,57,43,.32); }
+
+    .vtx-field {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg); border: 1px solid var(--border-light);
+      border-radius: 12px; padding: 13px 14px;
+      transition: var(--transition);
+    }
+    .vtx-field:hover { background: var(--border-light); border-color: var(--border); }
+    .vtx-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+    }
+    .vtx-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .vtx-label { font-size: .7rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: .7px; }
+    .vtx-value { font-size: .9rem; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     @media (max-width: 768px) {
       .tx-summary { grid-template-columns: 1fr 1fr; }
       .page-search input { width: 160px; }
@@ -144,6 +184,40 @@
       .medi-table th:nth-child(5),
       .medi-table td:nth-child(5) { display: none; }
     }
+
+    /* Modal */
+    .mt-modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(10,10,20,.55);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center; justify-content: center;
+    }
+    .mt-modal-overlay.show { display: flex; }
+    .mt-modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      width: 100%; max-width: 420px;
+      margin: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: fadeUp .32s cubic-bezier(.34,1.2,.64,1);
+    }
+    .mt-modal h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.15rem; font-weight: 800;
+      color: var(--text-1); margin-bottom: 4px;
+    }
+    .modal-actions { display: flex; gap: 10px; }
+    .btn-modal-cancel {
+      flex: 1; padding: 12px;
+      background: var(--bg); color: var(--text-2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px; font-size: .9rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif; cursor: pointer; transition: var(--transition);
+    }
+    .btn-modal-cancel:hover { background: var(--border-light); }
   </style>
 </head>
 <body>
@@ -171,6 +245,7 @@
         <li class="nav-item"><a href="../dashboard/index.html" class="nav-link"><i class="bi bi-grid-fill nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
         <li class="nav-item"><a href="../medicines/medicines.html" class="nav-link"><i class="bi bi-capsule-pill nav-icon"></i><span class="nav-label">Medicines</span></a></li>
         <li class="nav-item"><a href="../transactions/transactions.html" class="nav-link active" aria-current="page"><i class="bi bi-arrow-left-right nav-icon"></i><span class="nav-label">Transactions</span></a></li>
+        <li class="nav-item"><a href="../ris/ris.html" class="nav-link"><i class="bi bi-file-earmark-text-fill nav-icon"></i><span class="nav-label">RIS Requests</span></a></li>
       </ul>
       <span class="nav-section-label" style="margin-top:8px;">Management</span>
       <ul>
@@ -298,6 +373,80 @@
     </div>
 
   </main>
+</div>
+
+<!-- VIEW TRANSACTION MODAL -->
+<div class="mt-modal-overlay" id="viewTxModal">
+  <div class="mt-modal" style="max-width:480px;padding:0;overflow:hidden;">
+
+    <div style="display:flex;align-items:center;gap:14px;padding:24px 24px 20px;position:relative;">
+      <div id="viewTxIconWrap" style="width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18);">
+        <i id="viewTxIcon" class="bi bi-box-arrow-in-down"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <h2 style="margin:0;font-size:1.08rem;" id="viewTxTitle">Transaction</h2>
+        <div id="viewTxBadge" style="margin-top:5px;"></div>
+      </div>
+      <button onclick="closeViewTxModal()" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;color:var(--text-3);background:var(--bg);border:1.5px solid var(--border);transition:var(--transition);cursor:pointer;flex-shrink:0;" onmouseover="this.style.background='var(--red-bg)';this.style.color='var(--red)';this.style.borderColor='var(--red)';" onmouseout="this.style.background='';this.style.color='';this.style.borderColor='';"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <div style="height:1px;background:var(--border-light);margin:0 24px;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px 24px 0;">
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(124,58,237,.1);color:#7c3aed;"><i class="bi bi-capsule-pill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Medicine</span><span class="vtx-value" id="vtxMedicine">—</span></div>
+      </div>
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(22,163,74,.1);color:var(--green);"><i class="bi bi-stack"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Quantity</span><span class="vtx-value" id="vtxQuantity">—</span></div>
+      </div>
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(246,172,2,.12);color:var(--yellow-dark);"><i class="bi bi-calendar-event-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Date</span><span class="vtx-value" id="vtxDate">—</span></div>
+      </div>
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(37,99,235,.1);color:var(--blue);"><i class="bi bi-person-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Performed By</span><span class="vtx-value" id="vtxPerformer">—</span></div>
+      </div>
+
+      <!-- OUT-only fields -->
+      <div class="vtx-field" id="vtxPatientWrap" style="grid-column:1/-1;">
+        <div class="vtx-icon" style="background:rgba(123,29,30,.08);color:var(--maroon);"><i class="bi bi-person-badge-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Patient</span><span class="vtx-value" id="vtxPatient">—</span></div>
+      </div>
+
+      <div class="vtx-field" id="vtxCourseWrap">
+        <div class="vtx-icon" style="background:rgba(37,99,235,.1);color:var(--blue);"><i class="bi bi-mortarboard-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Course</span><span class="vtx-value" id="vtxCourse">—</span></div>
+      </div>
+
+      <div class="vtx-field" id="vtxSectionWrap">
+        <div class="vtx-icon" style="background:rgba(234,88,12,.1);color:var(--orange);"><i class="bi bi-people-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Section</span><span class="vtx-value" id="vtxSection">—</span></div>
+      </div>
+
+      <div class="vtx-field" id="vtxIllnessWrap" style="grid-column:1/-1;">
+        <div class="vtx-icon" style="background:rgba(220,38,38,.1);color:var(--red);"><i class="bi bi-heart-pulse-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Illness / Complaint</span><span class="vtx-value" id="vtxIllness">—</span></div>
+      </div>
+
+      <!-- IN-only field -->
+      <div class="vtx-field" id="vtxNoteWrap" style="grid-column:1/-1;">
+        <div class="vtx-icon" style="background:rgba(22,163,74,.1);color:var(--green);"><i class="bi bi-card-text"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Note</span><span class="vtx-value" id="vtxNote">—</span></div>
+      </div>
+
+    </div>
+
+    <div class="modal-actions" style="margin:24px 24px 24px;">
+      <button type="button" class="btn-modal-cancel" onclick="closeViewTxModal()"><i class="bi bi-x"></i> Close</button>
+    </div>
+  </div>
 </div>
 
 <!-- DELETE TRANSACTION MODAL -->

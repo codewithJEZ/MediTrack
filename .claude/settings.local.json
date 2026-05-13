@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:3000/api/medicines)",
+      "Bash(python -c \"import sys,json; arr=json.load\\(sys.stdin\\); found=next\\(\\(m for m in arr if m['id']==5\\),None\\); print\\('Appears in list:', 'YES' if found else 'NO'\\); print\\('Total records:', len\\(arr\\)\\)\")"
+    ]
+  }
+}

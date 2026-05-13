@@ -5,6 +5,7 @@ let selectedMedId = null;
 let submitting = false;
 
 const storedUser = JSON.parse(localStorage.getItem('user'));
+if (!storedUser || storedUser.role !== 'staff') window.location.href = '../../index.html';
 const userName = storedUser ? storedUser.name : 'Staff User';
 document.getElementById('sidebarUserName').textContent = userName;
 document.getElementById('sidebarAvatarInitial').textContent = userName.charAt(0).toUpperCase();
@@ -40,7 +41,12 @@ function renderTable(data) {
       <td style="color:var(--text-3);font-size:.83rem;">${m.unit || '—'}</td>
       <td class="td-date">${expDate}</td>
       <td><span class="pill ${statusClass}"><span style="background:${dotColor};width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:4px;"></span>${status}</span></td>
-      <td><button class="btn-tbl btn-use" onclick="openUseModal(${m.id})" ${m.quantity === 0 ? 'disabled style="opacity:.45;cursor:not-allowed;pointer-events:none;"' : ''}><i class="bi bi-box-arrow-right"></i> Use</button></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-tbl btn-use" onclick="openUseModal(${m.id})" ${m.quantity === 0 ? 'disabled style="opacity:.45;cursor:not-allowed;pointer-events:none;"' : ''}><i class="bi bi-box-arrow-right"></i> Use</button>
+          <button class="btn-tbl btn-restock" onclick="addToStockInCart(${m.id})"><i class="bi bi-cart-plus-fill"></i> Add to Cart</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -165,3 +171,145 @@ async function loadMedicines() {
 }
 
 loadMedicines();
+
+// --- Stock In Cart (staff only) ---
+
+let stockInList = [];
+
+function addToStockInCart(id) {
+  const m = allMedicines.find(x => x.id === id);
+  if (!m) return;
+  const existing = stockInList.find(x => x.id === id);
+  if (existing) {
+    showToast('Already in Cart', `${m.name} is already in the cart — adjust its quantity inside.`, 'w');
+    openStockInCart();
+    return;
+  }
+  stockInList.push({ id: m.id, name: m.name, currentStock: m.quantity, unit: m.unit || '', qty: 1, note: '' });
+  updateStockInBadge();
+  showToast('Added to Cart', `${m.name} added to the stock-in cart.`, 's');
+}
+
+function updateStockInCartQty(id, val) {
+  const item = stockInList.find(x => x.id === id);
+  if (item) item.qty = Math.max(1, parseInt(val) || 1);
+}
+
+function updateStockInCartNote(id, val) {
+  const item = stockInList.find(x => x.id === id);
+  if (item) item.note = (val || '').trim();
+}
+
+function removeFromStockInCart(id) {
+  stockInList = stockInList.filter(x => x.id !== id);
+  updateStockInBadge();
+  renderStockInCart();
+}
+
+function updateStockInBadge() {
+  const badge = document.getElementById('stockInCartBadge');
+  if (badge) {
+    badge.textContent = stockInList.length;
+    badge.style.display = stockInList.length > 0 ? 'inline-flex' : 'none';
+  }
+  const sub = document.getElementById('stockInCartSub');
+  if (sub) sub.textContent = stockInList.length
+    ? `${stockInList.length} item${stockInList.length !== 1 ? 's' : ''} queued for stock-in`
+    : 'No items queued yet.';
+}
+
+function renderStockInCart() {
+  const list  = document.getElementById('stockInCartList');
+  const empty = document.getElementById('stockInCartEmpty');
+  if (!stockInList.length) {
+    list.style.display  = 'none';
+    list.innerHTML      = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.style.display  = 'flex';
+  list.innerHTML = stockInList.map(item => `
+    <div style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1.5px solid var(--border-light);border-radius:10px;padding:11px 13px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:120px;">
+        <div style="font-size:.88rem;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</div>
+        <div style="font-size:.74rem;color:var(--text-3);margin-top:2px;">
+          Current Stock: <strong>${item.currentStock} ${item.unit}</strong>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <input type="number" min="1" value="${item.qty}"
+            title="Quantity to stock in"
+            style="width:72px;padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:.88rem;font-family:'Nunito',sans-serif;text-align:center;outline:none;background:var(--surface);color:var(--text-1);"
+            onchange="updateStockInCartQty(${item.id}, this.value)"
+            oninput="updateStockInCartQty(${item.id}, this.value)" />
+          <input type="text" value="${item.note ? item.note.replace(/"/g, '&quot;') : ''}" placeholder="Note…"
+            title="Optional note"
+            style="width:120px;padding:5px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:.76rem;font-family:'Nunito',sans-serif;outline:none;background:var(--surface);color:var(--text-1);"
+            oninput="updateStockInCartNote(${item.id}, this.value)" />
+        </div>
+        <button onclick="removeFromStockInCart(${item.id})"
+          style="width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.82rem;background:rgba(192,57,43,.08);color:#c0392b;border:1px solid rgba(192,57,43,.18);cursor:pointer;flex-shrink:0;"
+          onmouseover="this.style.background='#c0392b';this.style.color='#fff';"
+          onmouseout="this.style.background='rgba(192,57,43,.08)';this.style.color='#c0392b';">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openStockInCart() {
+  renderStockInCart();
+  updateStockInBadge();
+  document.getElementById('stockInCartModal').classList.add('show');
+}
+
+function closeStockInCart() {
+  document.getElementById('stockInCartModal').classList.remove('show');
+}
+
+async function confirmDelivery() {
+  if (!stockInList.length) {
+    showToast('Cart Empty', 'Add at least one medicine to the cart first.', 'w');
+    return;
+  }
+  const btn = document.getElementById('confirmDeliveryBtn');
+  btn.disabled = true;
+  btn.style.opacity = '.75';
+  btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .6s linear infinite;"></span> Submitting…</span>';
+
+  try {
+    const res = await fetch(`${API}/ris`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requested_by: storedUser ? (storedUser.name || storedUser.username || 'Staff') : 'Staff',
+        items: stockInList.map(i => ({ medicine_id: i.id, quantity: i.qty, unit: i.unit || null }))
+      })
+    });
+    if (res.ok) {
+      showToast('RIS Submitted', `Restock request created for ${stockInList.length} item${stockInList.length !== 1 ? 's' : ''}. Awaiting admin approval.`, 's');
+      stockInList = [];
+      updateStockInBadge();
+      closeStockInCart();
+    } else {
+      const err = await res.json();
+      showToast('Error', err.error || 'Failed to submit RIS.', 'e');
+    }
+  } catch {
+    showToast('Error', 'Network error. Please try again.', 'e');
+  } finally {
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.innerHTML = '<i class="bi bi-file-earmark-text"></i> Generate RIS';
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (document.getElementById('stockInCartModal').classList.contains('show')) closeStockInCart();
+    if (document.getElementById('useModal').classList.contains('show')) closeUseModal();
+  }
+});

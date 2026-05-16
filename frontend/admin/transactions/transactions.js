@@ -212,9 +212,16 @@ function applyFilters() {
 }
 
 function clearDateFilter() {
-  document.getElementById('dateFrom').value = '';
-  document.getElementById('dateTo').value   = '';
-  applyFilters();
+  console.log('[clearDateFilter] Resetting all filters...');
+  document.getElementById('searchInput').value = '';
+  document.getElementById('dateFrom').value    = '';
+  document.getElementById('dateTo').value      = '';
+  activeFilter = 'All';
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  const allTab = document.querySelector('.filter-tab[data-filter="All"]');
+  if (allTab) allTab.classList.add('active');
+  console.log('[clearDateFilter] All filters reset. Reloading full dataset...');
+  loadTransactions();
 }
 
 document.getElementById('filterTabs').addEventListener('click', e => {
@@ -244,23 +251,12 @@ function showToast(title, msg, type = 's') {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
 }
 
-function buildTransactionQueryParams() {
-  const fromVal  = document.getElementById('dateFrom').value;
-  const toVal    = document.getElementById('dateTo').value;
-  const search   = document.getElementById('searchInput').value.trim();
-  const params   = new URLSearchParams();
-  if (fromVal) params.set('from', fromVal);
-  if (toVal)   params.set('to', toVal);
-  if (search)  params.set('search', search);
-  return params.toString();
-}
-
 async function loadTransactions() {
+  console.log('[loadTransactions] Fetching all transactions from backend...');
   try {
-    const qs  = buildTransactionQueryParams();
-    const url = qs ? `${API}/transactions?${qs}` : `${API}/transactions`;
-    const res = await fetch(url);
+    const res = await fetch(`${API}/transactions`);
     allTransactions = await res.json();
+    console.log('[loadTransactions] Loaded', allTransactions.length, 'records');
     computeSummary();
     applyFilters();
   } catch {

@@ -354,7 +354,7 @@ document.getElementById('btnSaveProfile').addEventListener('click', () => {
   showToast('Profile Saved', 'Your profile has been updated successfully.', 's');
 });
 
-document.getElementById('btnChangePassword').addEventListener('click', () => {
+document.getElementById('btnChangePassword').addEventListener('click', async () => {
   const current = document.getElementById('inputCurrentPw').value;
   const newPw   = document.getElementById('inputNewPw').value;
   const confirm = document.getElementById('inputConfirmPw').value;
@@ -362,10 +362,23 @@ document.getElementById('btnChangePassword').addEventListener('click', () => {
   if (!newPw)            { showToast('Error', 'Please enter a new password.', 'e'); return; }
   if (newPw.length < 4)  { showToast('Error', 'New password must be at least 4 characters.', 'e'); return; }
   if (newPw !== confirm) { showToast('Error', 'Passwords do not match.', 'e'); return; }
-  document.getElementById('inputCurrentPw').value = '';
-  document.getElementById('inputNewPw').value     = '';
-  document.getElementById('inputConfirmPw').value  = '';
-  showToast('Password Updated', 'Your password has been changed successfully.', 's');
+  const sessionUser = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!sessionUser) { showToast('Error', 'Session expired. Please log in again.', 'e'); return; }
+  try {
+    const res = await fetch('http://localhost:3000/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: sessionUser.id, currentPassword: current, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('Error', data.error || 'Failed to change password.', 'e'); return; }
+    document.getElementById('inputCurrentPw').value = '';
+    document.getElementById('inputNewPw').value     = '';
+    document.getElementById('inputConfirmPw').value  = '';
+    showToast('Password Updated', 'Your password has been changed successfully.', 's');
+  } catch {
+    showToast('Error', 'Network error. Please try again.', 'e');
+  }
 });
 
 ['toggleNotifications','toggleLowStock','toggleExpiry'].forEach(id => {

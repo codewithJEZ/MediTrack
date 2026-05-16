@@ -2,9 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user) window.location.href = '../../index.html';</script>
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'staff') window.location.href = '../../index.html';
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTrack | Settings</title>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -14,7 +18,7 @@
   <style>
     .settings-grid {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 280px 1fr;
       gap: 22px;
       align-items: start;
     }
@@ -36,10 +40,14 @@
       margin: 0 auto 16px;
       box-shadow: 0 6px 20px rgba(123,29,30,.28);
     }
-    .profile-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-1); }
-    .profile-role {
+    .profile-display-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.1rem; font-weight: 800;
+      color: var(--text-1);
+    }
+    .profile-role-badge {
       display: inline-block;
-      margin-top: 6px; margin-bottom: 20px;
+      margin-top: 6px;
       padding: 4px 14px;
       background: rgba(123,29,30,.08);
       color: var(--maroon);
@@ -47,11 +55,11 @@
       font-size: .75rem; font-weight: 800;
       text-transform: uppercase; letter-spacing: .6px;
     }
-    .profile-stat-row { display: flex; gap: 0; border-top: 1px solid var(--border-light); padding-top: 16px; margin-top: 4px; }
-    .profile-stat { flex: 1; text-align: center; }
-    .profile-stat + .profile-stat { border-left: 1px solid var(--border-light); }
-    .profile-stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text-1); }
-    .profile-stat-lbl { font-size: .7rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+    .profile-joined {
+      margin-top: 14px;
+      font-size: .78rem;
+      color: var(--text-3);
+    }
 
     .settings-panels { display: flex; flex-direction: column; gap: 18px; }
     .settings-section {
@@ -132,9 +140,6 @@
     @media (max-width: 900px) {
       .settings-grid { grid-template-columns: 1fr; }
     }
-    @media (max-width: 768px) {
-      .profile-stat-row { flex-direction: row; }
-    }
   </style>
 </head>
 <body>
@@ -143,9 +148,11 @@
 
 <div class="app">
 
-  <aside class="sidebar" id="sidebar">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Navigation">
+
     <div class="sidebar-brand">
-      <div class="brand-logo-wrap">
+      <div class="brand-logo-wrap" title="MediTrack">
         <img src="../../assets/logo.png" alt="MediTrack Logo"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
         <span class="brand-logo-icon" style="display:none;"><i class="bi bi-heart-pulse-fill"></i></span>
@@ -155,60 +162,100 @@
         <span class="brand-tagline">Clinic Inventory</span>
       </div>
     </div>
+
     <nav class="sidebar-nav">
       <span class="nav-section-label">Main Menu</span>
       <ul>
-        <li class="nav-item"><a href="../dashboard/index.html" class="nav-link"><i class="bi bi-grid-fill nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
-        <li class="nav-item"><a href="../medicines/medicines.html" class="nav-link"><i class="bi bi-capsule-pill nav-icon"></i><span class="nav-label">Medicines</span></a></li>
-        <li class="nav-item"><a href="../transactions/transactions.html" class="nav-link"><i class="bi bi-arrow-left-right nav-icon"></i><span class="nav-label">Transactions</span></a></li>
+        <li class="nav-item">
+          <a href="../dashboard/index.html" class="nav-link">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../medicines/medicines.html" class="nav-link">
+            <i class="bi bi-capsule-pill nav-icon"></i>
+            <span class="nav-label">Medicines</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../cart/cart.html" class="nav-link">
+            <i class="bi bi-cart3 nav-icon"></i>
+            <span class="nav-label">Cart</span>
+            <span class="nav-badge" id="sidebarCartBadge" style="display:none;">0</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../ris/ris.html" class="nav-link">
+            <i class="bi bi-file-earmark-text-fill nav-icon"></i>
+            <span class="nav-label">My Requests</span>
+          </a>
+        </li>
       </ul>
-      <span class="nav-section-label" style="margin-top:8px;">Management</span>
+      <span class="nav-section-label" style="margin-top:8px;">More</span>
       <ul>
-        <li class="nav-item"><a href="../reports/reports.html" class="nav-link"><i class="bi bi-bar-chart-line-fill nav-icon"></i><span class="nav-label">Reports</span></a></li>
-        <li class="nav-item"><a href="../settings/settings.html" class="nav-link active" aria-current="page"><i class="bi bi-gear-fill nav-icon"></i><span class="nav-label">Settings</span></a></li>
+        <li class="nav-item">
+          <a href="../reports/reports.html" class="nav-link">
+            <i class="bi bi-bar-chart-line-fill nav-icon"></i>
+            <span class="nav-label">Reports</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../settings/settings.html" class="nav-link active" aria-current="page">
+            <i class="bi bi-gear-fill nav-icon"></i>
+            <span class="nav-label">Settings</span>
+          </a>
+        </li>
       </ul>
     </nav>
+
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="sidebar-avatar" id="sidebarAvatarInitial">S</div>
+        <div class="sidebar-avatar user-avatar"></div>
         <div class="sidebar-user-info">
-          <strong id="sidebarUserName">Staff User</strong>
-          <small>Clinic Staff</small>
+          <span class="user-name"></span>
+          <span class="user-role"></span>
         </div>
       </div>
-      <button class="btn-sidebar-logout" id="btnLogout">
-        <i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Logout</span>
+      <button class="btn-sidebar-logout logout-btn" type="button">
+        <i class="bi bi-box-arrow-right nav-icon"></i>
+        <span class="nav-label">Logout</span>
       </button>
     </div>
-  </aside>
 
+  </aside>
+  <!-- /sidebar -->
+
+
+  <!-- TOP NAVBAR -->
   <header class="top-navbar" id="topNavbar">
     <div class="navbar-left">
-      <button class="btn-menu-toggle" id="menuToggle" aria-label="Toggle Sidebar"><i class="bi bi-list"></i></button>
+      <button class="btn-menu-toggle" id="menuToggle" aria-label="Toggle Sidebar">
+        <i class="bi bi-list"></i>
+      </button>
       <div class="navbar-page-info">
         <div class="page-title">Settings</div>
-        <div class="page-crumb"><i class="bi bi-house-fill" style="font-size:.68rem;"></i>&nbsp;Home &rsaquo; Settings</div>
+        <div class="page-crumb">
+          <i class="bi bi-house-fill" style="font-size:.68rem;"></i>
+          &nbsp;Home &rsaquo; Settings
+        </div>
       </div>
     </div>
     <div class="navbar-right">
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search medicines…" />
-      </div>
-      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
-      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
-      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
       <div class="navbar-user" tabindex="0">
-        <div class="user-avatar-nav" id="navAvatarInitial">ST</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav" id="navUserName">Staff User</span>
-          <span class="user-role-nav">Staff</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
     </div>
   </header>
+  <!-- /top-navbar -->
 
+
+  <!-- MAIN CONTENT -->
   <main class="main-content" id="mainContent">
 
     <div class="section-row au d1" style="margin-bottom:22px;">
@@ -220,28 +267,17 @@
 
     <div class="settings-grid au d2">
 
+      <!-- Profile Card -->
       <div class="profile-card">
-        <div class="profile-avatar-lg" id="profileAvatarLg">S</div>
-        <div class="profile-name" id="profileDisplayName">Staff User</div>
-        <div class="profile-role">Clinic Staff</div>
-        <div class="profile-stat-row">
-          <div class="profile-stat">
-            <div class="profile-stat-val">15</div>
-            <div class="profile-stat-lbl">Transactions</div>
-          </div>
-          <div class="profile-stat">
-            <div class="profile-stat-val">12</div>
-            <div class="profile-stat-lbl">Dispensed</div>
-          </div>
-          <div class="profile-stat">
-            <div class="profile-stat-val">3</div>
-            <div class="profile-stat-lbl">Restocked</div>
-          </div>
-        </div>
+        <div class="profile-avatar-lg user-avatar" id="profileAvatarLg"></div>
+        <div class="profile-display-name user-name" id="profileDisplayName"></div>
+        <div class="profile-role-badge">Clinic Staff</div>
+        <div class="profile-joined" id="profileJoined"></div>
       </div>
 
       <div class="settings-panels">
 
+        <!-- Profile Information -->
         <div class="settings-section">
           <div class="settings-section-title">
             <i class="bi bi-person-fill"></i>
@@ -252,8 +288,9 @@
             <input type="text" class="form-input" id="inputDisplayName" placeholder="Enter your name…" />
           </div>
           <div class="form-row">
-            <label class="form-label" for="inputEmail">Email Address</label>
-            <input type="email" class="form-input" id="inputEmail" placeholder="your@email.com" />
+            <label class="form-label" for="inputUsername">Username</label>
+            <input type="text" class="form-input" id="inputUsername" disabled />
+            <span class="form-hint">Username cannot be changed.</span>
           </div>
           <div class="form-row">
             <label class="form-label" for="inputRole">Role</label>
@@ -267,6 +304,7 @@
           </div>
         </div>
 
+        <!-- Change Password -->
         <div class="settings-section">
           <div class="settings-section-title">
             <i class="bi bi-shield-lock-fill"></i>
@@ -291,6 +329,7 @@
           </div>
         </div>
 
+        <!-- Preferences -->
         <div class="settings-section">
           <div class="settings-section-title">
             <i class="bi bi-sliders2"></i>
@@ -318,16 +357,6 @@
           </div>
           <div class="toggle-row">
             <div class="toggle-info">
-              <div class="toggle-title">Dispense Confirmation</div>
-              <div class="toggle-desc">Show a confirmation dialog before dispensing</div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggleDispenseConfirm" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="toggle-row">
-            <div class="toggle-info">
               <div class="toggle-title">Compact Table View</div>
               <div class="toggle-desc">Show more rows by reducing row height</div>
             </div>
@@ -342,78 +371,127 @@
     </div>
 
   </main>
+  <!-- /main-content -->
+
 </div>
+<!-- /app wrapper -->
+
 
 <div class="toast-stack" id="toastStack"></div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
 <script>
-const storedUser = localStorage.getItem('admin') || 'Staff User';
-const initials   = storedUser.slice(0,2).toUpperCase();
+const API = 'http://localhost:3000/api';
 
-document.getElementById('sidebarUserName').textContent    = storedUser;
-document.getElementById('sidebarAvatarInitial').textContent = storedUser.charAt(0).toUpperCase();
-document.getElementById('navUserName').textContent        = storedUser;
-document.getElementById('navAvatarInitial').textContent   = initials;
-document.getElementById('profileDisplayName').textContent = storedUser;
-document.getElementById('profileAvatarLg').textContent   = storedUser.charAt(0).toUpperCase();
-document.getElementById('inputDisplayName').value        = storedUser;
+// Cart badge
+(function() {
+  const cart  = JSON.parse(localStorage.getItem('requestCart') || '[]');
+  const badge = document.getElementById('sidebarCartBadge');
+  if (badge) {
+    badge.textContent   = cart.length;
+    badge.style.display = cart.length > 0 ? 'inline-flex' : 'none';
+  }
+})();
 
-document.getElementById('btnSaveProfile').addEventListener('click', () => {
-  const name = document.getElementById('inputDisplayName').value.trim();
-  if (!name) { showToast('Error', 'Display name cannot be empty.', 'e'); return; }
-  localStorage.setItem('admin', name);
-  document.getElementById('sidebarUserName').textContent    = name;
-  document.getElementById('sidebarAvatarInitial').textContent = name.charAt(0).toUpperCase();
-  document.getElementById('navUserName').textContent        = name;
-  document.getElementById('navAvatarInitial').textContent   = name.slice(0,2).toUpperCase();
-  document.getElementById('profileDisplayName').textContent = name;
-  document.getElementById('profileAvatarLg').textContent   = name.charAt(0).toUpperCase();
-  showToast('Profile Saved', 'Your profile has been updated successfully.', 's');
+// Sidebar toggle
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('sidebarOverlay');
+document.getElementById('menuToggle').addEventListener('click', () => {
+  sidebarEl.classList.toggle('open');
+  overlayEl.classList.toggle('show');
+});
+overlayEl.addEventListener('click', () => {
+  sidebarEl.classList.remove('open');
+  overlayEl.classList.remove('show');
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    sidebarEl.classList.remove('open');
+    overlayEl.classList.remove('show');
+  }
 });
 
-document.getElementById('btnChangePassword').addEventListener('click', () => {
-  const current  = document.getElementById('inputCurrentPw').value;
-  const newPw    = document.getElementById('inputNewPw').value;
-  const confirm  = document.getElementById('inputConfirmPw').value;
-  if (!current)            { showToast('Error', 'Please enter your current password.', 'e'); return; }
-  if (!newPw)              { showToast('Error', 'Please enter a new password.', 'e'); return; }
-  if (newPw.length < 4)    { showToast('Error', 'New password must be at least 4 characters.', 'e'); return; }
-  if (newPw !== confirm)   { showToast('Error', 'Passwords do not match.', 'e'); return; }
-  document.getElementById('inputCurrentPw').value = '';
-  document.getElementById('inputNewPw').value     = '';
-  document.getElementById('inputConfirmPw').value  = '';
-  showToast('Password Updated', 'Your password has been changed successfully.', 's');
-});
-
-['toggleLowStock','toggleExpiry','toggleDispenseConfirm','toggleCompact'].forEach(id => {
-  const el = document.getElementById(id);
-  const saved = localStorage.getItem(id);
-  if (saved !== null) el.checked = saved === 'true';
-  el.addEventListener('change', () => {
-    localStorage.setItem(id, el.checked);
-    showToast('Preference Saved', `Setting updated.`, 's');
-  });
-});
-
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-
-document.getElementById('btnLogout').addEventListener('click', () => {
-  localStorage.removeItem('admin');
-  window.location.href = '../../index.html';
-});
-
+// Toast
 function showToast(title, msg, type = 's') {
   const icons = { s:'bi-check-circle-fill', w:'bi-exclamation-circle-fill', e:'bi-x-circle-fill' };
   const stack = document.getElementById('toastStack');
   const el    = document.createElement('div');
   el.className = 'toast-item';
-  el.innerHTML = `<div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div><div class="toast-body"><strong>${title}</strong><p>${msg}</p></div><button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
+  el.innerHTML = `
+    <div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div>
+    <div class="toast-body"><strong>${title}</strong><p>${msg}</p></div>
+    <button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>
+  `;
   stack.appendChild(el);
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
 }
+
+// Load user info into form fields
+const storedU = JSON.parse(localStorage.getItem('user') || 'null');
+if (storedU) {
+  const displayName = storedU.name || storedU.username || 'Staff';
+  document.getElementById('inputDisplayName').value = displayName;
+  document.getElementById('inputUsername').value    = storedU.username || '';
+  document.getElementById('profileJoined').textContent =
+    'Member since ' + new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+}
+
+// Save profile (display name only — updates local user object)
+document.getElementById('btnSaveProfile').addEventListener('click', () => {
+  const name = document.getElementById('inputDisplayName').value.trim();
+  if (!name) { showToast('Error', 'Display name cannot be empty.', 'e'); return; }
+
+  const u = JSON.parse(localStorage.getItem('user') || 'null');
+  if (u) {
+    u.name = name;
+    localStorage.setItem('user', JSON.stringify(u));
+    loadUserInfo(u);
+    document.getElementById('profileDisplayName').textContent = name;
+    document.getElementById('profileAvatarLg').textContent    = name.charAt(0).toUpperCase();
+  }
+  showToast('Profile Saved', 'Your display name has been updated.', 's');
+});
+
+// Change password
+document.getElementById('btnChangePassword').addEventListener('click', async () => {
+  const current = document.getElementById('inputCurrentPw').value;
+  const newPw   = document.getElementById('inputNewPw').value;
+  const confirm = document.getElementById('inputConfirmPw').value;
+  if (!current)          { showToast('Error', 'Please enter your current password.', 'e'); return; }
+  if (!newPw)            { showToast('Error', 'Please enter a new password.', 'e'); return; }
+  if (newPw.length < 4)  { showToast('Error', 'New password must be at least 4 characters.', 'e'); return; }
+  if (newPw !== confirm)  { showToast('Error', 'Passwords do not match.', 'e'); return; }
+  const sessionUser = JSON.parse(localStorage.getItem('user') || 'null');
+  if (!sessionUser) { showToast('Error', 'Session expired. Please log in again.', 'e'); return; }
+  try {
+    const res = await fetch('http://localhost:3000/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: sessionUser.id, currentPassword: current, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('Error', data.error || 'Failed to change password.', 'e'); return; }
+    document.getElementById('inputCurrentPw').value = '';
+    document.getElementById('inputNewPw').value     = '';
+    document.getElementById('inputConfirmPw').value = '';
+    showToast('Password Updated', 'Your password has been changed successfully.', 's');
+  } catch {
+    showToast('Error', 'Network error. Please try again.', 'e');
+  }
+});
+
+// Preferences toggles
+['toggleLowStock','toggleExpiry','toggleCompact'].forEach(id => {
+  const el    = document.getElementById(id);
+  const saved = localStorage.getItem(id);
+  if (saved !== null) el.checked = saved === 'true';
+  el.addEventListener('change', () => {
+    localStorage.setItem(id, el.checked);
+    showToast('Preference Saved', 'Setting updated.', 's');
+  });
+});
 </script>
 </body>
 </html>

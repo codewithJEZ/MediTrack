@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user || user.role !== 'staff') window.location.href = '../../index.html';
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediTrack | Request Cart</title>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../admin/main.css" />
+  <style>
+    /* Cart item card */
+    .cart-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      transition: var(--transition);
+    }
+    .cart-item:hover {
+      border-color: var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .cart-item-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--maroon) 0%, var(--maroon-light) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      color: var(--white);
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(123,29,30,.22);
+    }
+    .cart-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .cart-item-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cart-item-unit {
+      font-size: .76rem;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+    .cart-item-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .qty-input {
+      width: 72px;
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .88rem;
+      font-family: 'Nunito', sans-serif;
+      text-align: center;
+      outline: none;
+      background: var(--bg);
+      color: var(--text-1);
+      transition: var(--transition);
+    }
+    .qty-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
+
+    .note-input {
+      width: 150px;
+      padding: 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: .8rem;
+      font-family: 'Nunito', sans-serif;
+      outline: none;
+      background: var(--bg);
+      color: var(--text-1);
+      transition: var(--transition);
+    }
+    .note-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
+
+    .btn-remove-item {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem;
+      background: rgba(192,57,43,.08);
+      color: #c0392b;
+      border: 1px solid rgba(192,57,43,.18);
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+    .btn-remove-item:hover { background: #c0392b; color: var(--white); border-color: #c0392b; }
+
+    /* Empty cart */
+    .cart-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-3);
+    }
+    .cart-empty i { font-size: 3.5rem; display: block; margin-bottom: 16px; }
+    .cart-empty h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-2);
+      margin-bottom: 8px;
+    }
+    .cart-empty p { font-size: .875rem; margin-bottom: 20px; }
+
+    /* Summary footer bar */
+    .cart-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      padding: 18px 20px;
+      background: var(--bg);
+      border: 1.5px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      margin-top: 16px;
+    }
+    .cart-summary-text {
+      font-size: .88rem;
+      color: var(--text-2);
+      font-weight: 600;
+    }
+    .cart-summary-text strong {
+      color: var(--text-1);
+      font-size: 1rem;
+    }
+    .cart-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-clear-cart {
+      padding: 10px 20px;
+      background: var(--bg);
+      color: var(--text-2);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: .88rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-clear-cart:hover { background: rgba(192,57,43,.07); color: #c0392b; border-color: rgba(192,57,43,.3); }
+    .btn-submit-request {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #1d4ed8, #2563eb);
+      color: var(--white);
+      border: none;
+      border-radius: 10px;
+      font-size: .88rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(37,99,235,.28);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .btn-submit-request:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,.38); }
+    .btn-submit-request:disabled { opacity: .55; cursor: not-allowed; pointer-events: none; }
+
+    @media (max-width: 600px) {
+      .cart-item { flex-wrap: wrap; }
+      .cart-item-controls { width: 100%; }
+      .note-input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main Navigation">
+
+    <div class="sidebar-brand">
+      <div class="brand-logo-wrap" title="MediTrack">
+        <img src="../../assets/logo.png" alt="MediTrack Logo"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+        <span class="brand-logo-icon" style="display:none;"><i class="bi bi-heart-pulse-fill"></i></span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">MediTrack</span>
+        <span class="brand-tagline">Clinic Inventory</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <span class="nav-section-label">Main Menu</span>
+      <ul>
+        <li class="nav-item">
+          <a href="../dashboard/index.html" class="nav-link">
+            <i class="bi bi-grid-fill nav-icon"></i>
+            <span class="nav-label">Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../medicines/medicines.html" class="nav-link">
+            <i class="bi bi-capsule-pill nav-icon"></i>
+            <span class="nav-label">Medicines</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../cart/cart.html" class="nav-link active" aria-current="page">
+            <i class="bi bi-cart3 nav-icon"></i>
+            <span class="nav-label">Cart</span>
+            <span class="nav-badge" id="sidebarCartBadge" style="display:none;">0</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../ris/ris.html" class="nav-link">
+            <i class="bi bi-file-earmark-text-fill nav-icon"></i>
+            <span class="nav-label">My Requests</span>
+          </a>
+        </li>
+      </ul>
+      <span class="nav-section-label" style="margin-top:8px;">More</span>
+      <ul>
+        <li class="nav-item">
+          <a href="../reports/reports.html" class="nav-link">
+            <i class="bi bi-bar-chart-line-fill nav-icon"></i>
+            <span class="nav-label">Reports</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="../settings/settings.html" class="nav-link">
+            <i class="bi bi-gear-fill nav-icon"></i>
+            <span class="nav-label">Settings</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar user-avatar"></div>
+        <div class="sidebar-user-info">
+          <span class="user-name"></span>
+          <span class="user-role"></span>
+        </div>
+      </div>
+      <button class="btn-sidebar-logout logout-btn" type="button">
+        <i class="bi bi-box-arrow-right nav-icon"></i>
+        <span class="nav-label">Logout</span>
+      </button>
+    </div>
+
+  </aside>
+  <!-- /sidebar -->
+
+
+  <!-- TOP NAVBAR -->
+  <header class="top-navbar" id="topNavbar">
+    <div class="navbar-left">
+      <button class="btn-menu-toggle" id="menuToggle" aria-label="Toggle Sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="navbar-page-info">
+        <div class="page-title">Request Cart</div>
+        <div class="page-crumb">
+          <i class="bi bi-house-fill" style="font-size:.68rem;"></i>
+          &nbsp;Home &rsaquo; Cart
+        </div>
+      </div>
+    </div>
+    <div class="navbar-right">
+      <div class="navbar-user" tabindex="0">
+        <div class="user-avatar-nav user-avatar"></div>
+        <div class="user-text">
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
+        </div>
+        <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
+      </div>
+    </div>
+  </header>
+  <!-- /top-navbar -->
+
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content" id="mainContent">
+
+    <!-- Page header row -->
+    <div class="section-row au d1">
+      <div>
+        <div class="sec-title">Request Cart</div>
+        <div class="sec-sub">Review and submit your medicine restock request</div>
+      </div>
+      <a href="../medicines/medicines.html" class="btn-see-all">
+        <i class="bi bi-plus-lg"></i>&nbsp;Add More
+      </a>
+    </div>
+
+    <!-- Cart Content Card -->
+    <div class="card-panel au d2">
+
+      <div class="tbl-header" style="margin-bottom:18px;">
+        <h3>
+          <i class="bi bi-cart3" style="color:var(--maroon);margin-right:8px;"></i>
+          Cart Items
+        </h3>
+        <span id="cartItemCount" style="font-size:.8rem;color:var(--text-3);font-weight:600;">0 items</span>
+      </div>
+
+      <!-- Empty State -->
+      <div class="cart-empty" id="cartEmpty">
+        <i class="bi bi-cart-x"></i>
+        <h3>Your cart is empty</h3>
+        <p>Go to the Medicines page and click <strong>Add to Request</strong> on any medicine.</p>
+        <a href="../medicines/medicines.html" class="btn-primary-mt" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;">
+          <i class="bi bi-capsule-pill"></i> Browse Medicines
+        </a>
+      </div>
+
+      <!-- Cart Items List -->
+      <div id="cartItemsList" style="display:none;flex-direction:column;gap:10px;"></div>
+
+      <!-- Cart Footer (submit bar) -->
+      <div class="cart-footer" id="cartFooter" style="display:none;">
+        <div class="cart-summary-text">
+          <strong id="cartTotalItems">0</strong> item(s) queued for request
+        </div>
+        <div class="cart-actions">
+          <button class="btn-clear-cart" id="btnClearCart" onclick="clearCart()">
+            <i class="bi bi-trash3"></i> Clear All
+          </button>
+          <button class="btn-submit-request" id="btnSubmitRequest" onclick="submitRequest()">
+            <i class="bi bi-send-fill"></i> Submit Request
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+  <!-- /main-content -->
+
+</div>
+<!-- /app wrapper -->
+
+
+<div class="toast-stack" id="toastStack"></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/global.js"></script>
+
+<script>
+const API = 'http://localhost:3000/api';
+
+// Sidebar toggle
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('sidebarOverlay');
+document.getElementById('menuToggle').addEventListener('click', () => {
+  sidebarEl.classList.toggle('open');
+  overlayEl.classList.toggle('show');
+});
+overlayEl.addEventListener('click', () => {
+  sidebarEl.classList.remove('open');
+  overlayEl.classList.remove('show');
+});
+
+// ── Cart helpers ──────────────────────────────────────────────────────────────
+
+function getCart()       { return JSON.parse(localStorage.getItem('requestCart') || '[]'); }
+function saveCart(cart)  { localStorage.setItem('requestCart', JSON.stringify(cart)); }
+
+function updateQty(id, val) {
+  const cart = getCart();
+  const item = cart.find(x => x.id === id);
+  if (item) { item.qty = Math.max(1, parseInt(val) || 1); saveCart(cart); }
+}
+
+function updateNote(id, val) {
+  const cart = getCart();
+  const item = cart.find(x => x.id === id);
+  if (item) { item.note = (val || '').trim(); saveCart(cart); }
+}
+
+function removeItem(id) {
+  const cart = getCart().filter(x => x.id !== id);
+  saveCart(cart);
+  renderCart();
+  showToast('Removed', 'Item removed from cart.', 'w');
+}
+
+function clearCart() {
+  if (!getCart().length) return;
+  saveCart([]);
+  renderCart();
+  showToast('Cart Cleared', 'All items have been removed.', 'w');
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function renderCart() {
+  const cart      = getCart();
+  const listEl    = document.getElementById('cartItemsList');
+  const emptyEl   = document.getElementById('cartEmpty');
+  const footerEl  = document.getElementById('cartFooter');
+  const countEl   = document.getElementById('cartItemCount');
+  const totalEl   = document.getElementById('cartTotalItems');
+  const sbadge    = document.getElementById('sidebarCartBadge');
+
+  countEl.textContent  = `${cart.length} item${cart.length !== 1 ? 's' : ''}`;
+  totalEl.textContent  = cart.length;
+
+  if (sbadge) {
+    sbadge.textContent   = cart.length;
+    sbadge.style.display = cart.length > 0 ? 'inline-flex' : 'none';
+  }
+
+  if (!cart.length) {
+    listEl.style.display  = 'none';
+    listEl.innerHTML      = '';
+    footerEl.style.display = 'none';
+    emptyEl.style.display  = 'block';
+    return;
+  }
+
+  emptyEl.style.display  = 'none';
+  listEl.style.display   = 'flex';
+  footerEl.style.display = 'flex';
+
+  listEl.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-icon">
+        <i class="bi bi-capsule-pill"></i>
+      </div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-unit">${item.unit ? `Unit: ${item.unit}` : 'No unit specified'}</div>
+      </div>
+      <div class="cart-item-controls">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Qty</label>
+          <input type="number"
+                 class="qty-input"
+                 value="${item.qty}"
+                 min="1"
+                 onchange="updateQty(${item.id}, this.value)"
+                 oninput="updateQty(${item.id}, this.value)"
+                 title="Quantity" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <label style="font-size:.68rem;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Note</label>
+          <input type="text"
+                 class="note-input"
+                 value="${(item.note || '').replace(/"/g, '&quot;')}"
+                 placeholder="Optional note…"
+                 oninput="updateNote(${item.id}, this.value)"
+                 title="Optional note" />
+        </div>
+        <button class="btn-remove-item"
+                onclick="removeItem(${item.id})"
+                title="Remove item"
+                aria-label="Remove ${item.name} from cart">
+          <i class="bi bi-trash3"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+
+async function submitRequest() {
+  const cart = getCart();
+  if (!cart.length) {
+    showToast('Empty Cart', 'Add at least one medicine before submitting.', 'w');
+    return;
+  }
+
+  const btn = document.getElementById('btnSubmitRequest');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin .6s linear infinite;"></span> Submitting…</span>';
+
+  try {
+    const storedU = JSON.parse(localStorage.getItem('user') || 'null');
+    const res = await fetch(`${API}/ris`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requested_by: storedU ? (storedU.name || storedU.username || 'Staff') : 'Staff',
+        items: cart.map(i => ({ medicine_id: i.id, quantity: i.qty, unit: i.unit || null, note: i.note || '' }))
+      })
+    });
+
+    if (res.ok) {
+      showToast('Request Submitted', `Your restock request for ${cart.length} item(s) has been sent for approval.`, 's');
+      saveCart([]);
+      renderCart();
+      setTimeout(() => { window.location.href = '../ris/ris.html'; }, 1800);
+    } else {
+      const err = await res.json();
+      showToast('Error', err.error || 'Failed to submit request.', 'e');
+    }
+  } catch {
+    showToast('Error', 'Network error. Please try again.', 'e');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send-fill"></i> Submit Request';
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+
+function showToast(title, msg, type = 's') {
+  const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };
+  const stack = document.getElementById('toastStack');
+  const el    = document.createElement('div');
+  el.className = 'toast-item';
+  el.innerHTML = `
+    <div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div>
+    <div class="toast-body"><strong>${title}</strong><p>${msg}</p></div>
+    <button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>
+  `;
+  stack.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+renderCart();
+</script>
+
+</body>
+</html>

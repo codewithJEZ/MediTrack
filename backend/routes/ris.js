@@ -25,6 +25,10 @@ try { db.exec(`ALTER TABLE ris_items ADD COLUMN unit TEXT`); } catch (_) {}
 try { db.exec(`ALTER TABLE ris_items ADD COLUMN note TEXT`); } catch (_) {}
 try { db.exec(`ALTER TABLE ris_requests ADD COLUMN reject_reason TEXT`); } catch (_) {}
 
+// Migrate old status values to standardized names
+try { db.exec(`UPDATE ris_requests SET status = 'approved'  WHERE status = 'approved_for_purchase'`); } catch (_) {}
+try { db.exec(`UPDATE ris_requests SET status = 'delivered' WHERE status = 'completed'`); } catch (_) {}
+
 router.post('/', (req, res) => {
   const { requested_by, items } = req.body;
   if (!requested_by || !Array.isArray(items) || items.length === 0) {
@@ -122,8 +126,8 @@ router.put('/:id/approve', (req, res) => {
     if (ris.status !== 'pending') {
       return res.status(400).json({ error: `RIS is already ${ris.status}.` });
     }
-    db.prepare(`UPDATE ris_requests SET status = 'approved_for_purchase' WHERE id = ?`).run(ris.id);
-    res.json({ ...ris, status: 'approved_for_purchase' });
+    db.prepare(`UPDATE ris_requests SET status = 'approved' WHERE id = ?`).run(ris.id);
+    res.json({ ...ris, status: 'approved' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -133,10 +137,10 @@ router.put('/:id/deliver', (req, res) => {
   try {
     const ris = db.prepare(`SELECT * FROM ris_requests WHERE id = ?`).get(req.params.id);
     if (!ris) return res.status(404).json({ error: 'RIS not found.' });
-    if (ris.status === 'completed') {
+    if (ris.status === 'delivered') {
       return res.status(400).json({ error: 'RIS has already been delivered.' });
     }
-    if (ris.status !== 'approved_for_purchase') {
+    if (ris.status !== 'approved') {
       return res.status(400).json({ error: `RIS cannot be delivered. Current status: ${ris.status}.` });
     }
     const items = db.prepare(`SELECT * FROM ris_items WHERE ris_id = ?`).all(ris.id);
@@ -147,9 +151,9 @@ router.put('/:id/deliver', (req, res) => {
           `INSERT INTO transactions (medicine_id, type, quantity, notes) VALUES (?, 'in', ?, ?)`
         ).run(item.medicine_id, item.quantity, `Restock via RIS #${ris.id}`);
       }
-      db.prepare(`UPDATE ris_requests SET status = 'completed' WHERE id = ?`).run(ris.id);
+      db.prepare(`UPDATE ris_requests SET status = 'delivered' WHERE id = ?`).run(ris.id);
     })();
-    res.json({ ...ris, status: 'completed' });
+    res.json({ ...ris, status: 'delivered' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

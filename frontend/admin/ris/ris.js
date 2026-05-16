@@ -37,14 +37,13 @@ function showToast(title, msg, type = 's') {
 // ── Helpers ───────────────────────────────────────────────────
 
 function statusLabel(status) {
-  const normalized = status === 'approved' ? 'completed' : status;
   const map = {
-    pending: 'Pending',
-    approved_for_purchase: 'Approved (For Purchase)',
-    completed: 'Completed',
-    rejected: 'Rejected',
+    pending:   'Pending',
+    approved:  'Approved',
+    delivered: 'Delivered',
+    rejected:  'Rejected',
   };
-  return map[normalized] || normalized || status || '';
+  return map[(status || '').toLowerCase()] || status || '';
 }
 
 function fmtDate(dt) {
@@ -63,8 +62,7 @@ function applyFilters() {
   const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
   const filtered = allRIS.filter(r => {
     const matchQ    = !q || String(r.id).includes(q) || (r.requested_by || '').toLowerCase().includes(q);
-    const normalized = r.status === 'approved' ? 'completed' : r.status;
-    const matchStat = !stat || normalized === stat;
+    const matchStat = !stat || (r.status || '').toLowerCase() === stat;
     const txDate    = r.created_at ? new Date(r.created_at) : null;
     const matchFrom = !fromDate || (txDate && txDate >= fromDate);
     const matchTo   = !toDate   || (txDate && txDate <= toDate);
@@ -74,9 +72,11 @@ function applyFilters() {
 }
 
 function clearDateFilter() {
-  document.getElementById('dateFrom').value = '';
-  document.getElementById('dateTo').value   = '';
-  applyFilters();
+  document.getElementById('searchInput').value  = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('dateFrom').value     = '';
+  document.getElementById('dateTo').value       = '';
+  loadRIS();
 }
 
 function renderTable(data) {
@@ -88,9 +88,9 @@ function renderTable(data) {
   empty.style.display = 'none';
   tbody.innerHTML = data.map(r => {
     const totalItems = Array.isArray(r.items) ? r.items.length : (r.item_count || 0);
-    const isPending             = r.status === 'pending';
-    const isApprovedForPurchase = r.status === 'approved_for_purchase';
-    const canExportPdf          = r.status === 'approved_for_purchase' || r.status === 'completed';
+    const isPending    = r.status === 'pending';
+    const isApproved   = r.status === 'approved';
+    const canExportPdf = r.status === 'approved' || r.status === 'delivered';
     return `<tr>
       <td style="font-weight:800;color:var(--maroon);font-size:.9rem;">#${r.id}</td>
       <td style="font-weight:600;color:var(--text-1);">${r.requested_by || '—'}</td>
@@ -106,7 +106,7 @@ function renderTable(data) {
           <button class="btn-tbl btn-approve" onclick="approveRIS(${r.id})"><i class="bi bi-check-lg"></i> Approve</button>
           <button class="btn-tbl btn-reject"  onclick="rejectRIS(${r.id})"><i class="bi bi-x-lg"></i> Reject</button>
           ` : ''}
-          ${isApprovedForPurchase ? `
+          ${isApproved ? `
           <button class="btn-tbl btn-approve" id="deliver-btn-${r.id}" onclick="markDelivered(${r.id})" style="background:rgba(29,78,216,.1);color:#1d4ed8;border-color:rgba(29,78,216,.22);" onmouseover="this.style.background='#1d4ed8';this.style.color='#fff';" onmouseout="this.style.background='rgba(29,78,216,.1)';this.style.color='#1d4ed8';"><i class="bi bi-box-arrow-in-down"></i> Delivered</button>
           ` : ''}
           ${canExportPdf ? `
@@ -153,7 +153,6 @@ async function openViewModal(id) {
   document.getElementById('viewRISStatus').textContent    = statusLabel('pending');
   metaEl.textContent = 'Loading…';
   itemsEl.innerHTML  = '<p style="text-align:center;color:var(--text-3);font-size:.85rem;padding:20px 0;"><span style="display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--maroon);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px;"></span>Loading…</p>';
-  document.getElementById('viewApproveBtn').style.display = 'none';
   document.getElementById('viewRejectBtn').style.display  = 'none';
   document.getElementById('viewDeleteBtn').style.display  = 'none';
   document.getElementById('viewPdfBtn').style.display     = 'none';
@@ -204,14 +203,13 @@ async function openViewModal(id) {
         </table>`;
     }
 
-    const isPending             = r.status === 'pending';
-    const isApprovedForPurchase = r.status === 'approved_for_purchase';
-    const canExportPdf          = r.status === 'approved_for_purchase' || r.status === 'completed';
-    document.getElementById('viewApproveBtn').style.display  = isPending             ? '' : 'none';
-    document.getElementById('viewRejectBtn').style.display   = isPending             ? '' : 'none';
-    document.getElementById('viewDeliverBtn').style.display  = isApprovedForPurchase ? '' : 'none';
+    const isPending    = r.status === 'pending';
+    const isApproved   = r.status === 'approved';
+    const canExportPdf = r.status === 'approved' || r.status === 'delivered';
+    document.getElementById('viewRejectBtn').style.display   = isPending  ? '' : 'none';
+    document.getElementById('viewDeliverBtn').style.display  = isApproved ? '' : 'none';
     document.getElementById('viewDeleteBtn').style.display   = '';
-    document.getElementById('viewPdfBtn').style.display      = canExportPdf          ? '' : 'none';
+    document.getElementById('viewPdfBtn').style.display      = canExportPdf ? '' : 'none';
   } catch {
     metaEl.textContent = 'Failed to load RIS details.';
     itemsEl.innerHTML  = '<p style="text-align:center;color:var(--red);font-size:.85rem;padding:16px 0;">Error loading items.</p>';
@@ -228,7 +226,6 @@ function rejectRIS(id)      { promptAction(id, 'reject'); }
 function deleteRIS(id)      { promptAction(id, 'delete'); }
 function markDelivered(id)  { promptAction(id, 'deliver'); }
 
-function approveFromView()  { if (currentViewId !== null) { closeViewModal(); approveRIS(currentViewId); } }
 function rejectFromView()   { if (currentViewId !== null) { closeViewModal(); rejectRIS(currentViewId); } }
 function deliverFromView()  { if (currentViewId !== null) { closeViewModal(); markDelivered(currentViewId); } }
 function deleteFromView()   { if (currentViewId !== null) { closeViewModal(); deleteRIS(currentViewId); } }
@@ -343,6 +340,7 @@ async function executeConfirm() {
     } else {
       const err = await res.json();
       showToast('Error', err.error || `Failed to ${action} RIS.`, 'e');
+      if (res.status === 404) await loadRIS();
     }
   } catch {
     closeConfirmModal();
@@ -436,11 +434,12 @@ async function generateRISPdf(id) {
 
     // ── Status pill ────────────────────────────────────────────
     const statusColors = {
-      approved: [22, 163, 74],
-      rejected: [220, 38, 38],
-      pending:  [201, 140, 0],
+      approved:  [22, 163, 74],
+      delivered: [29, 78, 216],
+      rejected:  [220, 38, 38],
+      pending:   [201, 140, 0],
     };
-    const sColor = statusColors[r.status] || statusColors.pending;
+    const sColor = statusColors[(r.status || '').toLowerCase()] || statusColors.pending;
     doc.setFillColor(...sColor);
     doc.roundedRect(margin, y, 34, 7, 1.5, 1.5, 'F');
     doc.setFont('helvetica', 'bold');

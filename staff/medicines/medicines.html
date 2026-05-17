@@ -40,9 +40,103 @@
     .btn-add-request:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(123,29,30,.32); }
     .btn-add-request:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
 
-    @media (max-width: 480px) {
+    .btn-dispense {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 14px; border-radius: 8px;
+      font-size: .78rem; font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      color: #fff; border: none;
+      box-shadow: 0 2px 8px rgba(37,99,235,.22);
+      cursor: pointer; transition: var(--transition);
+    }
+    .btn-dispense:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(37,99,235,.32); }
+    .btn-dispense:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
+    /* ── Dispense Modal ───────────────────────────────────────── */
+    .dispense-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(24,28,46,.55); backdrop-filter: blur(4px);
+      z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .dispense-overlay.open { display: flex; }
+    .dispense-card {
+      background: var(--surface); border-radius: var(--radius);
+      box-shadow: var(--shadow-lg); width: 100%; max-width: 490px;
+      overflow: hidden; animation: slideUp .22s ease;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .dispense-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 18px; border-bottom: 1px solid var(--border-light);
+    }
+    .dispense-title { display: flex; align-items: center; gap: 12px; }
+    .dispense-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--blue-bg); color: var(--blue);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .dispense-title h4 { font-size: 1rem; font-weight: 800; color: var(--text-1); margin: 0; }
+    .dispense-title p  { font-size: .78rem; color: var(--text-3); margin: 2px 0 0; }
+    .dispense-close {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; color: var(--text-3); transition: var(--transition);
+    }
+    .dispense-close:hover { background: var(--border); color: var(--text-1); }
+    .dispense-body { padding: 20px 24px; }
+    .dispense-med-badge {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px; background: var(--surface-2);
+      border: 1px solid var(--border-light); border-radius: 10px; margin-bottom: 18px;
+    }
+    .dispense-med-badge strong { font-size: .92rem; display: block; color: var(--text-1); }
+    .dispense-med-badge small  { font-size: .76rem; color: var(--text-3); margin-top: 2px; display: block; }
+    .dispense-form { display: flex; flex-direction: column; gap: 14px; }
+    .df-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .df-group { display: flex; flex-direction: column; gap: 5px; }
+    .df-label { font-size: .8rem; font-weight: 700; color: var(--text-2); }
+    .df-req { color: var(--red); }
+    .df-input {
+      padding: 10px 13px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); font-size: .88rem;
+      font-family: 'Nunito', sans-serif; color: var(--text-1);
+      background: var(--surface); outline: none; transition: var(--transition);
+    }
+    .df-input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); }
+    .df-hint { font-size: .76rem; color: var(--text-3); margin-top: 3px; }
+    .dispense-footer {
+      display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+      padding: 16px 24px; border-top: 1px solid var(--border-light);
+      background: var(--surface-2);
+    }
+    .btn-dispense-submit {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      font-size: .88rem; font-weight: 700; font-family: 'Nunito', sans-serif;
+      background: linear-gradient(135deg, var(--maroon), var(--maroon-light));
+      color: var(--white); border: none;
+      box-shadow: 0 2px 10px rgba(123,29,30,.25); transition: var(--transition);
+    }
+    .btn-dispense-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(123,29,30,.32); }
+    .btn-dispense-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    @media (max-width: 768px) {
+      .medi-table th:nth-child(3),
+      .medi-table td:nth-child(3),
       .medi-table th:nth-child(4),
       .medi-table td:nth-child(4) { display: none; }
+      .df-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .medi-table th:nth-child(6),
+      .medi-table td:nth-child(6),
+      .medi-table th:nth-child(7),
+      .medi-table td:nth-child(7) { display: none; }
     }
   </style>
 </head>
@@ -204,6 +298,8 @@
             <tr>
               <th>Medicine</th>
               <th>Category</th>
+              <th>Form</th>
+              <th>Strength</th>
               <th>Qty</th>
               <th>Unit</th>
               <th>Expiration</th>
@@ -225,6 +321,58 @@
 
 </div>
 <!-- /app wrapper -->
+
+
+<!-- ── Dispense Modal ───────────────────────────────────────────── -->
+<div class="dispense-overlay" id="dispenseOverlay">
+  <div class="dispense-card">
+    <div class="dispense-header">
+      <div class="dispense-title">
+        <div class="dispense-icon"><i class="bi bi-box-arrow-right"></i></div>
+        <div>
+          <h4>Dispense Medicine</h4>
+          <p>Fill in patient details to proceed</p>
+        </div>
+      </div>
+      <button class="dispense-close" onclick="closeDispenseModal()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="dispense-body">
+      <div id="dispenseMedInfo"></div>
+      <div class="dispense-form">
+        <div class="df-group">
+          <label class="df-label">Patient Name <span class="df-req">*</span></label>
+          <input type="text" id="dPatientName" class="df-input" placeholder="Full name of patient" />
+        </div>
+        <div class="df-row">
+          <div class="df-group">
+            <label class="df-label">Course <span class="df-req">*</span></label>
+            <input type="text" id="dCourse" class="df-input" placeholder="e.g. BSIT" />
+          </div>
+          <div class="df-group">
+            <label class="df-label">Section <span class="df-req">*</span></label>
+            <input type="text" id="dSection" class="df-input" placeholder="e.g. 2A" />
+          </div>
+        </div>
+        <div class="df-group">
+          <label class="df-label">Illness / Complaint <span class="df-req">*</span></label>
+          <input type="text" id="dIllness" class="df-input" placeholder="e.g. Headache, Fever" />
+        </div>
+        <div class="df-group">
+          <label class="df-label">Quantity to Dispense <span class="df-req">*</span></label>
+          <input type="number" id="dQuantity" class="df-input" min="1" placeholder="Enter quantity" />
+          <span id="dStockInfo" class="df-hint"></span>
+        </div>
+      </div>
+    </div>
+    <div class="dispense-footer">
+      <button class="btn-secondary-mt" onclick="closeDispenseModal()">Cancel</button>
+      <button class="btn-dispense-submit" id="btnDispenseSubmit" onclick="dispenseMedicine()">
+        <i class="bi bi-box-arrow-right"></i> Dispense
+      </button>
+    </div>
+  </div>
+</div>
+<!-- /dispense modal -->
 
 
 <div class="toast-stack" id="toastStack"></div>

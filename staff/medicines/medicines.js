@@ -52,28 +52,39 @@ function renderTable(data) {
     const expDate = m.expiration_date
       ? new Date(m.expiration_date).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
       : '—';
-    const cat    = categoryMap[m.category_id] || '—';
+    const cat     = categoryMap[m.category_id] || '—';
     const noStock = m.quantity === 0;
+    const expired = status === 'Expired';
 
     return `<tr>
       <td>
         <div class="td-medicine">
           <div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>
-          ${m.name}${m.strength ? `<span style="font-size:.75rem;color:var(--text-3);margin-left:4px;">${m.strength}</span>` : ''}
+          ${m.name}
         </div>
       </td>
       <td style="color:var(--text-2);font-size:.84rem;">${cat}</td>
+      <td style="color:var(--text-2);font-size:.84rem;">${m.dosage_form || '—'}</td>
+      <td style="color:var(--text-2);font-size:.84rem;">${m.strength || '—'}</td>
       <td class="td-qty">${m.quantity}</td>
       <td style="color:var(--text-3);font-size:.83rem;">${m.unit || '—'}</td>
       <td class="td-date">${expDate}</td>
       <td>${statusPillHTML(status)}</td>
       <td>
-        <button class="btn-add-request"
-                onclick="addToRequestCart(${m.id})"
-                ${noStock ? 'disabled' : ''}
-                title="${noStock ? 'Out of stock' : 'Add to request cart'}">
-          <i class="bi bi-cart-plus-fill"></i> Add to Request
-        </button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn-add-request"
+                  onclick="addToRequestCart(${m.id})"
+                  ${noStock ? 'disabled' : ''}
+                  title="${noStock ? 'Out of stock' : 'Add to request cart'}">
+            <i class="bi bi-cart-plus-fill"></i> Add to Request
+          </button>
+          <button class="btn-dispense"
+                  onclick="openDispenseModal(${m.id})"
+                  ${noStock || expired ? 'disabled' : ''}
+                  title="${expired ? 'Medicine is expired' : noStock ? 'Out of stock' : 'Dispense to patient'}">
+            <i class="bi bi-box-arrow-right"></i> Use
+          </button>
+        </div>
       </td>
     </tr>`;
   }).join('');
@@ -192,8 +203,9 @@ async function loadMedicines() {
     categoryMap = {};
     cats.forEach(c => { categoryMap[c.id] = c.name; });
 
-    // Populate category filter
+    // Populate category filter (clear first to avoid duplicates on reload)
     const sel = document.getElementById('categoryFilter');
+    sel.innerHTML = '<option value="">All Categories</option>';
     cats.forEach(c => {
       const opt   = document.createElement('option');
       opt.value   = c.name;
@@ -208,6 +220,104 @@ async function loadMedicines() {
   }
 }
 
+// ── Dispense ─────────────────────────────────────────────────────────────────
+
+let dispenseTarget = null;
+
+function openDispenseModal(id) {
+  const m = allMedicines.find(x => x.id === id);
+  if (!m) return;
+
+  dispenseTarget = m;
+
+  const cat = categoryMap[m.category_id] || '—';
+  document.getElementById('dispenseMedInfo').innerHTML = `
+    <div class="dispense-med-badge">
+      <div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>
+      <div>
+        <strong>${m.name}${m.strength ? ` — ${m.strength}` : ''}</strong>
+        <small>${cat} &bull; ${m.dosage_form || '—'} &bull; <b style="color:var(--text-2);">${m.quantity} ${m.unit || 'units'}</b> available</small>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('dPatientName').value = '';
+  document.getElementById('dCourse').value      = '';
+  document.getElementById('dSection').value     = '';
+  document.getElementById('dIllness').value     = '';
+  document.getElementById('dQuantity').value    = '';
+  document.getElementById('dQuantity').max      = m.quantity;
+  document.getElementById('dStockInfo').textContent = `Available stock: ${m.quantity} ${m.unit || 'units'}`;
+
+  const btn = document.getElementById('btnDispenseSubmit');
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-box-arrow-right"></i> Dispense';
+
+  document.getElementById('dispenseOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('dPatientName').focus(), 100);
+}
+
+function closeDispenseModal() {
+  document.getElementById('dispenseOverlay').classList.remove('open');
+  dispenseTarget = null;
+}
+
+async function dispenseMedicine() {
+  if (!dispenseTarget) return;
+
+  const patientName = document.getElementById('dPatientName').value.trim();
+  const course      = document.getElementById('dCourse').value.trim();
+  const section     = document.getElementById('dSection').value.trim();
+  const illness     = document.getElementById('dIllness').value.trim();
+  const quantity    = parseInt(document.getElementById('dQuantity').value, 10);
+
+  if (!patientName) return showToast('Required', 'Patient name is required.', 'w');
+  if (!course)      return showToast('Required', 'Course is required.', 'w');
+  if (!section)     return showToast('Required', 'Section is required.', 'w');
+  if (!illness)     return showToast('Required', 'Illness / complaint is required.', 'w');
+  if (!quantity || quantity <= 0) return showToast('Required', 'Enter a valid quantity.', 'w');
+  if (quantity > dispenseTarget.quantity) {
+    return showToast('Insufficient Stock', `Only ${dispenseTarget.quantity} ${dispenseTarget.unit || 'units'} available.`, 'w');
+  }
+
+  const btn = document.getElementById('btnDispenseSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing…';
+
+  try {
+    const res = await fetch(`${API}/transactions`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        medicine_id:  dispenseTarget.id,
+        type:         'out',
+        quantity,
+        patient_name: patientName,
+        course,
+        section,
+        illness,
+        user_id: storedUser ? storedUser.id : null
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showToast('Error', data.error || 'Failed to dispense.', 'e');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-box-arrow-right"></i> Dispense';
+    } else {
+      showToast('Dispensed', `${quantity} ${dispenseTarget.unit || 'unit(s)'} of <b>${dispenseTarget.name}</b> dispensed to ${patientName}.`, 's');
+      closeDispenseModal();
+      loadMedicines();
+    }
+  } catch {
+    showToast('Error', 'Connection error. Please try again.', 'e');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-box-arrow-right"></i> Dispense';
+  }
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 
 loadMedicines();
@@ -217,5 +327,10 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     sidebarEl.classList.remove('open');
     overlayEl.classList.remove('show');
+    closeDispenseModal();
   }
+});
+
+document.getElementById('dispenseOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('dispenseOverlay')) closeDispenseModal();
 });

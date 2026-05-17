@@ -36,10 +36,14 @@
       margin: 0 auto 16px;
       box-shadow: 0 6px 20px rgba(123,29,30,.28);
     }
-    .profile-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--text-1); }
-    .profile-role {
+    .profile-display-name {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.1rem; font-weight: 800;
+      color: var(--text-1);
+    }
+    .profile-role-badge {
       display: inline-block;
-      margin-top: 6px; margin-bottom: 20px;
+      margin-top: 6px;
       padding: 4px 14px;
       background: rgba(123,29,30,.08);
       color: var(--maroon);
@@ -47,11 +51,11 @@
       font-size: .75rem; font-weight: 800;
       text-transform: uppercase; letter-spacing: .6px;
     }
-    .profile-stat-row { display: flex; gap: 0; border-top: 1px solid var(--border-light); padding-top: 16px; margin-top: 4px; }
-    .profile-stat { flex: 1; text-align: center; }
-    .profile-stat + .profile-stat { border-left: 1px solid var(--border-light); }
-    .profile-stat-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text-1); }
-    .profile-stat-lbl { font-size: .7rem; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+    .profile-joined {
+      margin-top: 14px;
+      font-size: .78rem;
+      color: var(--text-3);
+    }
 
     .settings-panels { display: flex; flex-direction: column; gap: 18px; }
     .settings-section {
@@ -101,39 +105,9 @@
     .btn-save:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(123,29,30,.36); }
     .btn-save:active { transform: none; }
 
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 0;
-      border-bottom: 1px solid var(--border-light);
-    }
-    .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .toggle-info .toggle-title { font-size: .88rem; font-weight: 700; color: var(--text-1); }
-    .toggle-info .toggle-desc  { font-size: .76rem; color: var(--text-3); margin-top: 2px; }
-    .toggle-switch {
-      position: relative; width: 46px; height: 26px; flex-shrink: 0;
-    }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider {
-      position: absolute; inset: 0; border-radius: 26px;
-      background: var(--border); cursor: pointer;
-      transition: var(--transition);
-    }
-    .toggle-slider::before {
-      content: ''; position: absolute;
-      width: 20px; height: 20px; border-radius: 50%;
-      background: var(--white);
-      left: 3px; top: 3px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.18);
-      transition: var(--transition);
-    }
-    .toggle-switch input:checked + .toggle-slider { background: var(--maroon); }
-    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
 
     @media (max-width: 900px) {
       .settings-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 768px) {
-      .profile-stat-row { flex-direction: row; }
     }
   </style>
 </head>
@@ -218,22 +192,9 @@
 
       <div class="profile-card">
         <div class="profile-avatar-lg user-avatar" id="profileAvatarLg"></div>
-        <div class="profile-name user-name" id="profileDisplayName"></div>
-        <div class="profile-role user-role" id="profileDisplayRole"></div>
-        <div class="profile-stat-row">
-          <div class="profile-stat">
-            <div class="profile-stat-val">12</div>
-            <div class="profile-stat-lbl">Medicines</div>
-          </div>
-          <div class="profile-stat">
-            <div class="profile-stat-val">5</div>
-            <div class="profile-stat-lbl">Users</div>
-          </div>
-          <div class="profile-stat">
-            <div class="profile-stat-val">38</div>
-            <div class="profile-stat-lbl">Transactions</div>
-          </div>
-        </div>
+        <div class="profile-display-name user-name" id="profileDisplayName"></div>
+        <div class="profile-role-badge">Administrator</div>
+        <div class="profile-joined" id="profileJoined"></div>
       </div>
 
       <div class="settings-panels">
@@ -248,13 +209,14 @@
             <input type="text" class="form-input" id="inputDisplayName" placeholder="Enter your name…" />
           </div>
           <div class="form-row">
-            <label class="form-label" for="inputEmail">Email Address</label>
-            <input type="email" class="form-input" id="inputEmail" placeholder="your@email.com" />
+            <label class="form-label" for="inputUsername">Username</label>
+            <input type="text" class="form-input" id="inputUsername" disabled />
+            <span class="form-hint">Username cannot be changed.</span>
           </div>
           <div class="form-row">
             <label class="form-label" for="inputRole">Role</label>
-            <input type="text" class="form-input user-role" id="inputRole" disabled />
-            <span class="form-hint">Role cannot be changed from this panel.</span>
+            <input type="text" class="form-input" id="inputRole" value="Administrator" disabled />
+            <span class="form-hint">Role is assigned by the administrator and cannot be changed.</span>
           </div>
           <div style="margin-top:8px;">
             <button class="btn-save" id="btnSaveProfile">
@@ -287,42 +249,6 @@
           </div>
         </div>
 
-        <div class="settings-section">
-          <div class="settings-section-title">
-            <i class="bi bi-sliders2"></i>
-            System Preferences
-          </div>
-          <div class="toggle-row">
-            <div class="toggle-info">
-              <div class="toggle-title">Enable Notifications</div>
-              <div class="toggle-desc">Show system-wide alerts and notifications</div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggleNotifications" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="toggle-row">
-            <div class="toggle-info">
-              <div class="toggle-title">Low Stock Alerts</div>
-              <div class="toggle-desc">Receive alerts when a medicine is running low</div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggleLowStock" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-          <div class="toggle-row">
-            <div class="toggle-info">
-              <div class="toggle-title">Expiry Alerts</div>
-              <div class="toggle-desc">Get notified when medicines are expiring soon</div>
-            </div>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggleExpiry" checked />
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -334,24 +260,44 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../../js/global.js"></script>
 <script>
-const storedUserData = JSON.parse(localStorage.getItem('user') || 'null');
-const storedUser = storedUserData ? (storedUserData.username || storedUserData.name || 'User') : 'User';
-const storedRole = storedUserData ? (storedUserData.role || '') : '';
+function showToast(title, msg, type = 's') {
+  const icons = { s:'bi-check-circle-fill', w:'bi-exclamation-circle-fill', e:'bi-x-circle-fill' };
+  const stack = document.getElementById('toastStack');
+  const el    = document.createElement('div');
+  el.className = 'toast-item';
+  el.innerHTML = `<div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div><div class="toast-body"><strong>${title}</strong><p>${msg}</p></div><button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
+  stack.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
+}
 
-document.getElementById('profileDisplayName').textContent = storedUser;
-document.getElementById('profileAvatarLg').textContent   = storedUser.charAt(0).toUpperCase();
-document.getElementById('inputDisplayName').value        = storedUser;
-document.getElementById('profileDisplayRole').textContent = storedRole;
-document.getElementById('inputRole').value               = storedRole;
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('sidebarOverlay');
+document.getElementById('menuToggle').addEventListener('click', () => { sidebarEl.classList.toggle('open'); overlayEl.classList.toggle('show'); });
+overlayEl.addEventListener('click', () => { sidebarEl.classList.remove('open'); overlayEl.classList.remove('show'); });
+
+const storedU = JSON.parse(localStorage.getItem('user') || 'null');
+if (storedU) {
+  const displayName = storedU.name || storedU.username || 'Admin';
+  document.getElementById('profileDisplayName').textContent = displayName;
+  document.getElementById('profileAvatarLg').textContent    = displayName.charAt(0).toUpperCase();
+  document.getElementById('inputDisplayName').value         = displayName;
+  document.getElementById('inputUsername').value            = storedU.username || '';
+  document.getElementById('profileJoined').textContent =
+    'Member since ' + new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+}
 
 document.getElementById('btnSaveProfile').addEventListener('click', () => {
   const name = document.getElementById('inputDisplayName').value.trim();
   if (!name) { showToast('Error', 'Display name cannot be empty.', 'e'); return; }
-  const userData = JSON.parse(localStorage.getItem('user')) || {};
-  userData.name = name;
-  localStorage.setItem('user', JSON.stringify(userData));
-  loadUserInfo(userData);
-  showToast('Profile Saved', 'Your profile has been updated successfully.', 's');
+  const u = JSON.parse(localStorage.getItem('user') || 'null');
+  if (u) {
+    u.name = name;
+    localStorage.setItem('user', JSON.stringify(u));
+    loadUserInfo(u);
+    document.getElementById('profileDisplayName').textContent = name;
+    document.getElementById('profileAvatarLg').textContent    = name.charAt(0).toUpperCase();
+  }
+  showToast('Profile Saved', 'Your display name has been updated.', 's');
 });
 
 document.getElementById('btnChangePassword').addEventListener('click', async () => {
@@ -361,7 +307,7 @@ document.getElementById('btnChangePassword').addEventListener('click', async () 
   if (!current)          { showToast('Error', 'Please enter your current password.', 'e'); return; }
   if (!newPw)            { showToast('Error', 'Please enter a new password.', 'e'); return; }
   if (newPw.length < 4)  { showToast('Error', 'New password must be at least 4 characters.', 'e'); return; }
-  if (newPw !== confirm) { showToast('Error', 'Passwords do not match.', 'e'); return; }
+  if (newPw !== confirm)  { showToast('Error', 'Passwords do not match.', 'e'); return; }
   const sessionUser = JSON.parse(localStorage.getItem('user') || 'null');
   if (!sessionUser) { showToast('Error', 'Session expired. Please log in again.', 'e'); return; }
   try {
@@ -374,38 +320,12 @@ document.getElementById('btnChangePassword').addEventListener('click', async () 
     if (!res.ok) { showToast('Error', data.error || 'Failed to change password.', 'e'); return; }
     document.getElementById('inputCurrentPw').value = '';
     document.getElementById('inputNewPw').value     = '';
-    document.getElementById('inputConfirmPw').value  = '';
+    document.getElementById('inputConfirmPw').value = '';
     showToast('Password Updated', 'Your password has been changed successfully.', 's');
   } catch {
     showToast('Error', 'Network error. Please try again.', 'e');
   }
 });
-
-['toggleNotifications','toggleLowStock','toggleExpiry'].forEach(id => {
-  const el    = document.getElementById(id);
-  const saved = localStorage.getItem(id);
-  if (saved !== null) el.checked = saved === 'true';
-  el.addEventListener('change', () => {
-    localStorage.setItem(id, el.checked);
-    showToast('Preference Saved', 'Setting updated.', 's');
-  });
-});
-
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-
-
-function showToast(title, msg, type = 's') {
-  const icons = { s:'bi-check-circle-fill', w:'bi-exclamation-circle-fill', e:'bi-x-circle-fill' };
-  const stack = document.getElementById('toastStack');
-  const el    = document.createElement('div');
-  el.className = 'toast-item';
-  el.innerHTML = `<div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div><div class="toast-body"><strong>${title}</strong><p>${msg}</p></div><button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
-  stack.appendChild(el);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
-}
 </script>
 </body>
 </html>

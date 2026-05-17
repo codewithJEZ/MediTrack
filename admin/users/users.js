@@ -101,11 +101,14 @@ function closeEditModal() {
 }
 
 async function updateUser() {
+  const id = Number(editUserId);
+  console.log('[updateUser] editUserId:', editUserId, '-> id:', id);
+  if (!id || isNaN(id)) { showToast('Error', 'Invalid user ID.', 'e'); return; }
   const name     = document.getElementById('editUserName').value.trim();
   const username = document.getElementById('editUserUsername').value.trim();
   const role     = document.getElementById('editUserRole').value;
   if (!name || !username || !role) { showToast('Incomplete Form', 'Please fill in all required fields.', 'e'); return; }
-  const res = await fetch(`${API}/users/${editUserId}`, {
+  const res = await fetch(`${API}/users/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, username, role })
@@ -113,7 +116,7 @@ async function updateUser() {
   if (res.ok) {
     closeEditModal();
     showToast('User Updated', `${name} has been updated.`, 's');
-    loadUsers();
+    await loadUsers();
   } else {
     const err = await res.json();
     showToast('Error', err.error || 'Failed to update user.', 'e');
@@ -147,7 +150,7 @@ async function confirmDeleteUser() {
   if (res.ok) {
     showToast('User Removed', `${u ? u.name : 'User'} has been removed.`, 's');
     closeDeleteModal();
-    loadUsers();
+    await loadUsers();
   } else {
     showToast('Error', 'Failed to delete user.', 'e');
   }
@@ -170,8 +173,9 @@ function showToast(title, msg, type = 's') {
 }
 
 async function loadUsers() {
-  const res = await fetch(`${API}/users`);
+  const res = await fetch(`${API}/users`, { cache: 'no-store' });
   USERS = await res.json();
+  console.log(`[loadUsers] Fetched ${USERS.length} users:`, USERS.map(u => u.id));
   applyFilters();
 }
 

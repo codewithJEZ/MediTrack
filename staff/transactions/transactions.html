@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user) window.location.href = '../../index.html';</script>
+  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user || user.role !== 'staff') window.location.href = '../../index.html';</script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTrack | Transactions</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
@@ -12,59 +12,86 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../../admin/main.css" />
   <style>
-    .page-toolbar {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 14px; flex-wrap: wrap; margin-bottom: 22px;
-    }
-    .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .toolbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    /* Filter tab pills */
     .filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
     .filter-tab {
-      padding: 8px 18px; border-radius: 20px; font-size: .84rem;
-      font-weight: 700; font-family: 'Nunito', sans-serif;
-      cursor: pointer; border: 1.5px solid var(--border);
-      background: var(--surface); color: var(--text-2);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: .84rem;
+      font-weight: 700;
+      font-family: 'Nunito', sans-serif;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      color: var(--text-2);
       transition: var(--transition);
     }
     .filter-tab:hover { border-color: var(--maroon); color: var(--maroon); }
-    .filter-tab.active { background: var(--maroon); color: var(--white); border-color: var(--maroon); box-shadow: 0 4px 14px rgba(123,29,30,.25); }
-    .page-search { position: relative; display: flex; align-items: center; }
-    .page-search input {
-      background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: 10px; padding: 10px 14px 10px 38px;
-      font-size: .88rem; font-family: 'Nunito', sans-serif;
-      color: var(--text-1); width: 220px; outline: none;
-      transition: var(--transition);
+    .filter-tab.active {
+      background: var(--maroon);
+      color: var(--white);
+      border-color: var(--maroon);
+      box-shadow: 0 4px 14px rgba(123,29,30,.25);
     }
-    .page-search input:focus { border-color: var(--maroon); box-shadow: 0 0 0 3px var(--maroon-glow); width: 260px; }
-    .page-search .bi { position: absolute; left: 12px; color: var(--text-3); font-size: .9rem; pointer-events: none; }
+
+    /* Type badges */
     .type-in  { background: var(--green-bg); color: var(--green); }
     .type-out { background: var(--red-bg);   color: var(--red); }
+
+    /* Summary cards */
     .tx-summary {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 16px; margin-bottom: 22px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
     }
     .tx-sum-card {
-      background: var(--surface); border: 1px solid var(--border-light);
-      border-radius: var(--radius-sm); padding: 18px 20px;
-      box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 14px;
     }
     .tx-sum-icon {
-      width: 44px; height: 44px; border-radius: 11px;
+      width: 44px; height: 44px;
+      border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
       font-size: 1.2rem; flex-shrink: 0;
     }
-    .tx-sum-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.55rem; font-weight: 800; color: var(--text-1); line-height: 1; }
+    .tx-sum-val {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: var(--text-1);
+      line-height: 1;
+    }
     .tx-sum-lbl { font-size: .78rem; font-weight: 600; color: var(--text-3); margin-top: 3px; }
+
+    /* View modal fields */
+    .vtx-field {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg); border: 1px solid var(--border-light);
+      border-radius: 12px; padding: 13px 14px;
+      transition: var(--transition);
+    }
+    .vtx-field:hover { background: var(--border-light); border-color: var(--border); }
+    .vtx-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .9rem; flex-shrink: 0;
+    }
+    .vtx-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .vtx-label { font-size: .7rem; font-weight: 800; color: var(--text-3); text-transform: uppercase; letter-spacing: .7px; }
+    .vtx-value { font-size: .9rem; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
     @media (max-width: 768px) {
       .tx-summary { grid-template-columns: 1fr 1fr; }
-      .page-search input { width: 160px; }
-      .page-search input:focus { width: 160px; }
-      .page-toolbar { flex-direction: column; align-items: stretch; }
     }
     @media (max-width: 480px) {
       .tx-summary { grid-template-columns: 1fr; }
-      .medi-table th:nth-child(5), .medi-table td:nth-child(5) { display: none; }
+      .medi-table th:nth-child(5),
+      .medi-table td:nth-child(5) { display: none; }
     }
   </style>
 </head>
@@ -74,45 +101,10 @@
 
 <div class="app">
 
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo-wrap">
-        <img src="../../assets/logo.png" alt="MediTrack Logo"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
-        <span class="brand-logo-icon" style="display:none;"><i class="bi bi-heart-pulse-fill"></i></span>
-      </div>
-      <div class="brand-text">
-        <span class="brand-name">MediTrack</span>
-        <span class="brand-tagline">Clinic Inventory</span>
-      </div>
-    </div>
-    <nav class="sidebar-nav">
-      <span class="nav-section-label">Main Menu</span>
-      <ul>
-        <li class="nav-item"><a href="../dashboard/index.html" class="nav-link"><i class="bi bi-grid-fill nav-icon"></i><span class="nav-label">Dashboard</span></a></li>
-        <li class="nav-item"><a href="../medicines/medicines.html" class="nav-link"><i class="bi bi-capsule-pill nav-icon"></i><span class="nav-label">Medicines</span></a></li>
-        <li class="nav-item"><a href="../transactions/transactions.html" class="nav-link active" aria-current="page"><i class="bi bi-arrow-left-right nav-icon"></i><span class="nav-label">Transactions</span></a></li>
-      </ul>
-      <span class="nav-section-label" style="margin-top:8px;">Management</span>
-      <ul>
-        <li class="nav-item"><a href="../reports/reports.html" class="nav-link"><i class="bi bi-bar-chart-line-fill nav-icon"></i><span class="nav-label">Reports</span></a></li>
-        <li class="nav-item"><a href="../settings/settings.html" class="nav-link"><i class="bi bi-gear-fill nav-icon"></i><span class="nav-label">Settings</span></a></li>
-      </ul>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="sidebar-avatar" id="sidebarAvatarInitial">S</div>
-        <div class="sidebar-user-info">
-          <strong id="sidebarUserName">Staff User</strong>
-          <small>Clinic Staff</small>
-        </div>
-      </div>
-      <button class="btn-sidebar-logout" id="btnLogout">
-        <i class="bi bi-box-arrow-right nav-icon"></i><span class="nav-label">Logout</span>
-      </button>
-    </div>
-  </aside>
+  <!-- SIDEBAR -->
+  <div id="sidebarMount"></div>
 
+  <!-- NAVBAR -->
   <header class="top-navbar" id="topNavbar">
     <div class="navbar-left">
       <button class="btn-menu-toggle" id="menuToggle" aria-label="Toggle Sidebar"><i class="bi bi-list"></i></button>
@@ -122,41 +114,46 @@
       </div>
     </div>
     <div class="navbar-right">
-      <div class="nav-search" role="search">
-        <i class="bi bi-search"></i>
-        <input type="search" placeholder="Search medicines…" />
-      </div>
-      <button class="btn-icon-nav keep" aria-label="Notifications"><i class="bi bi-bell-fill"></i><span class="notif-badge"></span></button>
-      <button class="btn-icon-nav" aria-label="Calendar"><i class="bi bi-calendar3"></i></button>
-      <button class="btn-icon-nav" aria-label="Help"><i class="bi bi-question-circle"></i></button>
       <div class="navbar-user" tabindex="0">
-        <div class="user-avatar-nav" id="navAvatarInitial">ST</div>
+        <div class="user-avatar-nav user-avatar"></div>
         <div class="user-text">
-          <span class="user-name-nav" id="navUserName">Staff User</span>
-          <span class="user-role-nav">Staff</span>
+          <span class="user-name-nav user-name"></span>
+          <span class="user-role-nav user-role"></span>
         </div>
         <i class="bi bi-chevron-down" style="font-size:.72rem;color:var(--text-3);margin-left:4px;"></i>
       </div>
     </div>
   </header>
 
+  <!-- MAIN CONTENT -->
   <main class="main-content" id="mainContent">
 
+    <!-- Summary Cards -->
     <div class="tx-summary au d1">
       <div class="tx-sum-card">
         <div class="tx-sum-icon" style="background:var(--blue-bg);color:var(--blue);"><i class="bi bi-receipt-cutoff"></i></div>
-        <div><div class="tx-sum-val" id="sumTotal">0</div><div class="tx-sum-lbl">Total Transactions</div></div>
+        <div>
+          <div class="tx-sum-val" id="sumTotal">0</div>
+          <div class="tx-sum-lbl">Total Transactions</div>
+        </div>
       </div>
       <div class="tx-sum-card">
         <div class="tx-sum-icon" style="background:var(--green-bg);color:var(--green);"><i class="bi bi-box-arrow-in-down"></i></div>
-        <div><div class="tx-sum-val" id="sumIn">0</div><div class="tx-sum-lbl">Stock In (Restock)</div></div>
+        <div>
+          <div class="tx-sum-val" id="sumIn">0</div>
+          <div class="tx-sum-lbl">Stock In</div>
+        </div>
       </div>
       <div class="tx-sum-card">
         <div class="tx-sum-icon" style="background:var(--red-bg);color:var(--red);"><i class="bi bi-box-arrow-right"></i></div>
-        <div><div class="tx-sum-val" id="sumOut">0</div><div class="tx-sum-lbl">Stock Out (Dispensed)</div></div>
+        <div>
+          <div class="tx-sum-val" id="sumOut">0</div>
+          <div class="tx-sum-lbl">Stock Out</div>
+        </div>
       </div>
     </div>
 
+    <!-- Toolbar -->
     <div class="page-toolbar au d2">
       <div class="toolbar-left">
         <div class="filter-tabs" id="filterTabs">
@@ -166,13 +163,24 @@
         </div>
       </div>
       <div class="toolbar-right">
+        <div class="date-filter">
+          <label>From</label>
+          <input type="date" class="date-input" id="dateFrom" />
+          <label>To</label>
+          <input type="date" class="date-input" id="dateTo" />
+          <button class="btn-clear-date" onclick="clearDateFilter()"><i class="bi bi-x-lg"></i> Clear</button>
+        </div>
         <div class="page-search">
           <i class="bi bi-search"></i>
-          <input type="search" id="searchInput" placeholder="Search transactions…" />
+          <input type="search" id="searchInput" placeholder="Search patient, illness, medicine…" />
         </div>
+        <button class="btn-clear-date" onclick="loadTransactions()" style="display:inline-flex;align-items:center;gap:6px;">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
       </div>
     </div>
 
+    <!-- Table -->
     <div class="card-panel au d3">
       <div class="tbl-header" style="margin-bottom:18px;">
         <h3><i class="bi bi-clock-history" style="color:var(--maroon);margin-right:8px;"></i>Transaction Records</h3>
@@ -182,12 +190,13 @@
         <table class="medi-table">
           <thead>
             <tr>
+              <th>Patient / Info</th>
+              <th>Illness</th>
               <th>Medicine</th>
-              <th>Type</th>
               <th>Qty</th>
+              <th>Type</th>
               <th>Date</th>
-              <th>Staff</th>
-              <th>Notes</th>
+              <th></th>
             </tr>
           </thead>
           <tbody id="txBody"></tbody>
@@ -198,84 +207,88 @@
   </main>
 </div>
 
+<!-- VIEW TRANSACTION MODAL -->
+<div class="mt-modal-overlay" id="viewTxModal">
+  <div class="mt-modal" style="max-width:480px;padding:0;overflow:hidden;">
+
+    <div style="display:flex;align-items:center;gap:14px;padding:24px 24px 20px;position:relative;">
+      <div id="viewTxIconWrap" style="width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(0,0,0,.18);">
+        <i id="viewTxIcon" class="bi bi-box-arrow-in-down"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <h2 style="margin:0;font-size:1.08rem;" id="viewTxTitle">Transaction</h2>
+        <div id="viewTxBadge" style="margin-top:5px;"></div>
+      </div>
+      <button onclick="closeViewTxModal()" style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;color:var(--text-3);background:var(--bg);border:1.5px solid var(--border);transition:var(--transition);cursor:pointer;flex-shrink:0;"
+        onmouseover="this.style.background='var(--red-bg)';this.style.color='var(--red)';this.style.borderColor='var(--red)';"
+        onmouseout="this.style.background='';this.style.color='';this.style.borderColor='';">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div style="height:1px;background:var(--border-light);margin:0 24px;"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px 24px 0;">
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(124,58,237,.1);color:#7c3aed;"><i class="bi bi-capsule-pill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Medicine</span><span class="vtx-value" id="vtxMedicine">—</span></div>
+      </div>
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(22,163,74,.1);color:var(--green);"><i class="bi bi-stack"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Quantity</span><span class="vtx-value" id="vtxQuantity">—</span></div>
+      </div>
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(246,172,2,.12);color:var(--yellow-dark);"><i class="bi bi-calendar-event-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Date</span><span class="vtx-value" id="vtxDate">—</span></div>
+      </div>
+
+      <div class="vtx-field">
+        <div class="vtx-icon" style="background:rgba(37,99,235,.1);color:var(--blue);"><i class="bi bi-person-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Performed By</span><span class="vtx-value" id="vtxPerformer">—</span></div>
+      </div>
+
+      <!-- OUT-only fields -->
+      <div class="vtx-field" id="vtxPatientWrap" style="grid-column:1/-1;">
+        <div class="vtx-icon" style="background:rgba(123,29,30,.08);color:var(--maroon);"><i class="bi bi-person-badge-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Patient</span><span class="vtx-value" id="vtxPatient">—</span></div>
+      </div>
+
+      <div class="vtx-field" id="vtxCourseWrap">
+        <div class="vtx-icon" style="background:rgba(37,99,235,.1);color:var(--blue);"><i class="bi bi-mortarboard-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Course</span><span class="vtx-value" id="vtxCourse">—</span></div>
+      </div>
+
+      <div class="vtx-field" id="vtxSectionWrap">
+        <div class="vtx-icon" style="background:rgba(234,88,12,.1);color:var(--orange);"><i class="bi bi-people-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Section</span><span class="vtx-value" id="vtxSection">—</span></div>
+      </div>
+
+      <div class="vtx-field" id="vtxIllnessWrap" style="grid-column:1/-1;">
+        <div class="vtx-icon" style="background:rgba(220,38,38,.1);color:var(--red);"><i class="bi bi-heart-pulse-fill"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Illness / Complaint</span><span class="vtx-value" id="vtxIllness">—</span></div>
+      </div>
+
+      <!-- IN-only field -->
+      <div class="vtx-field" id="vtxNoteWrap" style="grid-column:1/-1;">
+        <div class="vtx-icon" style="background:rgba(22,163,74,.1);color:var(--green);"><i class="bi bi-card-text"></i></div>
+        <div class="vtx-body"><span class="vtx-label">Note</span><span class="vtx-value" id="vtxNote">—</span></div>
+      </div>
+
+    </div>
+
+    <div class="modal-actions" style="margin:24px 24px 24px;">
+      <button type="button" class="btn-modal-cancel" onclick="closeViewTxModal()"><i class="bi bi-x"></i> Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-stack" id="toastStack"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-<script>
-const API = 'http://localhost:3000/api';
-const storedUser = JSON.parse(localStorage.getItem('user'));
-const userName = storedUser ? storedUser.name : 'Staff User';
-document.getElementById('sidebarUserName').textContent = userName;
-document.getElementById('sidebarAvatarInitial').textContent = userName.charAt(0).toUpperCase();
-document.getElementById('navUserName').textContent = userName;
-document.getElementById('navAvatarInitial').textContent = userName.slice(0,2).toUpperCase();
-
-let allTransactions = [];
-let medicineMap = {};
-let activeFilter = 'All';
-
-function computeSummary() {
-  document.getElementById('sumTotal').textContent = allTransactions.length;
-  document.getElementById('sumIn').textContent    = allTransactions.filter(t => t.type.toUpperCase() === 'IN').length;
-  document.getElementById('sumOut').textContent   = allTransactions.filter(t => t.type.toUpperCase() === 'OUT').length;
-}
-
-function renderTx(data) {
-  document.getElementById('txCount').textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
-  document.getElementById('txBody').innerHTML = data.map(t => {
-    const isIn = t.type.toUpperCase() === 'IN';
-    const dt   = new Date(t.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
-    const name = medicineMap[t.medicine_id] || `ID ${t.medicine_id}`;
-    return `<tr>
-      <td><div class="td-medicine"><div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>${name}</div></td>
-      <td><span class="pill ${isIn ? 'type-in' : 'type-out'}"><i class="bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}" style="margin-right:3px;"></i>${isIn ? 'Stock In' : 'Stock Out'}</span></td>
-      <td class="td-qty">${t.quantity}</td>
-      <td class="td-date">${dt}</td>
-      <td style="color:var(--text-2);font-size:.84rem;">—</td>
-      <td style="color:var(--text-3);font-size:.8rem;">—</td>
-    </tr>`;
-  }).join('');
-}
-
-function applyFilters() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  const data = allTransactions.filter(t => {
-    const name = (medicineMap[t.medicine_id] || '').toLowerCase();
-    return (activeFilter === 'All' || t.type.toUpperCase() === activeFilter) && (!q || name.includes(q));
-  });
-  renderTx(data);
-}
-
-document.getElementById('filterTabs').addEventListener('click', e => {
-  const tab = e.target.closest('.filter-tab');
-  if (!tab) return;
-  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-  tab.classList.add('active');
-  activeFilter = tab.dataset.filter;
-  applyFilters();
-});
-document.getElementById('searchInput').addEventListener('input', applyFilters);
-
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-
-document.getElementById('btnLogout').addEventListener('click', () => {
-  localStorage.removeItem('user');
-  window.location.href = '../../index.html';
-});
-
-async function loadTransactions() {
-  const [txRes, medsRes] = await Promise.all([fetch(`${API}/transactions`), fetch(`${API}/medicines`)]);
-  allTransactions = await txRes.json();
-  const meds = await medsRes.json();
-  medicineMap = {};
-  meds.forEach(m => { medicineMap[m.id] = m.name; });
-  computeSummary();
-  applyFilters();
-}
-
-loadTransactions();
-</script>
+<script src="../sidebar.js"></script>
+<script src="../../js/global.js"></script>
+<script src="transactions.js"></script>
 </body>
 </html>

@@ -160,18 +160,6 @@ function updateCartBadge() {
   }
 }
 
-// ── Sidebar / Overlay ────────────────────────────────────────────────────────
-
-const sidebarEl = document.getElementById('sidebar');
-const overlayEl = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => {
-  sidebarEl.classList.toggle('open');
-  overlayEl.classList.toggle('show');
-});
-overlayEl.addEventListener('click', () => {
-  sidebarEl.classList.remove('open');
-  overlayEl.classList.remove('show');
-});
 
 // ── Toast ────────────────────────────────────────────────────────────────────
 

@@ -126,6 +126,15 @@ router.post('/', (req, res) => {
 });
 
 router.delete('/:id', (req, res) => {
+  const requesterId = Number(req.headers['x-user-id']);
+  if (!requesterId || !Number.isInteger(requesterId) || requesterId <= 0) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  const requester = db.prepare('SELECT role FROM users WHERE id = ?').get(requesterId);
+  if (!requester || requester.role !== 'admin') {
+    return res.status(403).json({ error: 'Only administrators can delete transactions.' });
+  }
+
   try {
     const tx = db.prepare('SELECT id, medicine_id, type, quantity FROM transactions WHERE id = ?').get(req.params.id);
     if (!tx) return res.status(404).json({ error: 'Transaction not found.' });

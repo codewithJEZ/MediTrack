@@ -1,8 +1,6 @@
 const API = 'http://localhost:3000/api';
-const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 let allTransactions = [];
 let activeFilter = 'All';
-let pendingDeleteTxId = null;
 
 function computeSummary() {
   document.getElementById('sumTotal').textContent = allTransactions.length;
@@ -23,10 +21,12 @@ function formatTime(dateStr) {
 function renderTx(data) {
   const tbody = document.getElementById('txBody');
   document.getElementById('txCount').textContent = `${data.length} record${data.length !== 1 ? 's' : ''}`;
+
   if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:44px;color:var(--text-3);font-size:.88rem;">No records found.</td></tr>`;
     return;
   }
+
   tbody.innerHTML = data.slice().reverse().map(t => {
     const isIn      = (t.type || '').toUpperCase() === 'IN';
     const dt        = formatDate(t.created_at);
@@ -71,10 +71,7 @@ function renderTx(data) {
           ${performer ? `<div style="font-size:.72rem;color:var(--text-3);margin-top:3px;"><i class="bi bi-person-fill" style="margin-right:2px;"></i>${performer}</div>` : ''}
         </td>
         <td>
-          <div style="display:flex;gap:6px;">
-            <button class="btn-tbl btn-view" onclick="openViewTxModal(${t.id})"><i class="bi bi-eye"></i> View</button>
-            <button class="btn-tbl btn-delete" onclick="handleDeleteTransaction(${t.id})" title="Delete transaction"><i class="bi bi-trash"></i> Delete</button>
-          </div>
+          <button class="btn-tbl btn-view" onclick="openViewTxModal(${t.id})"><i class="bi bi-eye"></i> View</button>
         </td>
       </tr>`;
   }).join('');
@@ -87,27 +84,25 @@ function openViewTxModal(id) {
   const isIn = (t.type || '').toUpperCase() === 'IN';
 
   const iconWrap = document.getElementById('viewTxIconWrap');
-  const icon     = document.getElementById('viewTxIcon');
   iconWrap.style.background = isIn
     ? 'linear-gradient(135deg,#16a34a,#22c55e)'
     : 'linear-gradient(135deg,var(--maroon),var(--maroon-light))';
-  icon.className = `bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}`;
 
+  document.getElementById('viewTxIcon').className = `bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}`;
   document.getElementById('viewTxTitle').textContent = isIn ? 'Restocked' : 'Dispensed';
-
-  const badge = document.getElementById('viewTxBadge');
-  badge.innerHTML = `<span class="pill ${isIn ? 'type-in' : 'type-out'}">
-    <i class="bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}" style="margin-right:3px;"></i>
-    ${isIn ? 'Restocked' : 'Dispensed'}
-  </span>`;
+  document.getElementById('viewTxBadge').innerHTML = `
+    <span class="pill ${isIn ? 'type-in' : 'type-out'}">
+      <i class="bi ${isIn ? 'bi-box-arrow-in-down' : 'bi-box-arrow-right'}" style="margin-right:3px;"></i>
+      ${isIn ? 'Restocked' : 'Dispensed'}
+    </span>`;
 
   document.getElementById('vtxMedicine').textContent  = t.medicine_name || `ID ${t.medicine_id || '—'}`;
   document.getElementById('vtxQuantity').textContent  = t.quantity != null ? t.quantity : '—';
   document.getElementById('vtxDate').textContent      = `${formatDate(t.created_at)} ${formatTime(t.created_at)}`;
   document.getElementById('vtxPerformer').textContent = t.performed_by || '—';
 
-  const show = id => document.getElementById(id).style.display = '';
-  const hide = id => document.getElementById(id).style.display = 'none';
+  const show = elId => { document.getElementById(elId).style.display = ''; };
+  const hide = elId => { document.getElementById(elId).style.display = 'none'; };
 
   if (isIn) {
     hide('vtxPatientWrap'); hide('vtxCourseWrap'); hide('vtxSectionWrap'); hide('vtxIllnessWrap');
@@ -129,63 +124,9 @@ function closeViewTxModal() {
   document.getElementById('viewTxModal').classList.remove('show');
 }
 
-function handleDeleteTransaction(id) {
-  const numId = Number(id);
-  if (!id || !Number.isInteger(numId) || numId <= 0) {
-    console.error('[Delete] Invalid transaction ID:', id);
-    showToast('Error', 'Invalid transaction ID. Cannot delete.', 'e');
-    return;
-  }
-  console.log('[Delete] Opening modal for transaction ID:', numId);
-  pendingDeleteTxId = numId;
-  document.getElementById('deleteTxModal').classList.add('show');
-}
-
-function closeDeleteTxModal() {
-  pendingDeleteTxId = null;
-  document.getElementById('deleteTxModal').classList.remove('show');
-}
-
-async function confirmDeleteTransaction() {
-  if (!pendingDeleteTxId) {
-    console.warn('[Delete] confirmDeleteTransaction called with no pending ID');
-    return;
-  }
-  const id = pendingDeleteTxId;
-  console.log('[Delete] Confirming delete for transaction ID:', id);
-  closeDeleteTxModal();
-  try {
-    const res = await fetch(`${API}/transactions/${id}`, {
-      method: 'DELETE',
-      headers: { 'x-user-id': String(storedUser?.id || '') }
-    });
-    console.log('[Delete] Response status:', res.status);
-    if (res.ok) {
-      showToast('Deleted', 'Transaction has been removed successfully.', 's');
-      await loadTransactions();
-    } else {
-      const err = await res.json().catch(() => ({}));
-      console.error('[Delete] Error response:', err);
-      showToast('Error', err.error || 'Failed to delete transaction.', 'e');
-    }
-  } catch (e) {
-    console.error('[Delete] Network error:', e);
-    showToast('Error', 'Network error. Please try again.', 'e');
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Confirm button already has onclick in HTML; this guards against any future removal of that attribute
-  const confirmBtn = document.getElementById('btnConfirmDeleteTx');
-  if (confirmBtn && !confirmBtn.getAttribute('onclick')) {
-    confirmBtn.addEventListener('click', confirmDeleteTransaction);
-  }
-});
-
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    if (document.getElementById('viewTxModal').classList.contains('show'))   closeViewTxModal();
-    if (document.getElementById('deleteTxModal').classList.contains('show')) closeDeleteTxModal();
+  if (e.key === 'Escape' && document.getElementById('viewTxModal').classList.contains('show')) {
+    closeViewTxModal();
   }
 });
 
@@ -194,29 +135,27 @@ function applyFilters() {
   const fromVal  = document.getElementById('dateFrom').value;
   const toVal    = document.getElementById('dateTo').value;
   const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-  const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
-  console.log('[applyFilters] fromDate:', fromDate, '| toDate:', toDate);
+  const toDate   = toVal   ? new Date(toVal   + 'T23:59:59') : null;
 
   const data = allTransactions.filter(t => {
-    const med       = (t.medicine_name  || '').toLowerCase();
-    const patient   = (t.patient_name   || '').toLowerCase();
-    const course    = (t.course         || '').toLowerCase();
-    const section   = (t.section        || '').toLowerCase();
-    const illness   = (t.illness        || '').toLowerCase();
-    const performer = (t.performed_by   || '').toLowerCase();
+    const med       = (t.medicine_name || '').toLowerCase();
+    const patient   = (t.patient_name  || '').toLowerCase();
+    const course    = (t.course        || '').toLowerCase();
+    const section   = (t.section       || '').toLowerCase();
+    const illness   = (t.illness       || '').toLowerCase();
+    const performer = (t.performed_by  || '').toLowerCase();
     const txDate    = t.created_at ? new Date(t.created_at.replace(' ', 'T')) : null;
-    console.log('[applyFilters] txDate:', txDate, '| raw:', t.created_at);
+
     return (activeFilter === 'All' || (t.type || '').toUpperCase() === activeFilter) &&
            (!q || med.includes(q) || patient.includes(q) || course.includes(q) || section.includes(q) || illness.includes(q) || performer.includes(q)) &&
            (!fromDate || (txDate && txDate >= fromDate)) &&
            (!toDate   || (txDate && txDate <= toDate));
   });
-  console.log('[applyFilters] filtered results length:', data.length);
+
   renderTx(data);
 }
 
 function clearDateFilter() {
-  console.log('[clearDateFilter] Resetting all filters...');
   document.getElementById('searchInput').value = '';
   document.getElementById('dateFrom').value    = '';
   document.getElementById('dateTo').value      = '';
@@ -224,7 +163,6 @@ function clearDateFilter() {
   document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
   const allTab = document.querySelector('.filter-tab[data-filter="All"]');
   if (allTab) allTab.classList.add('active');
-  console.log('[clearDateFilter] All filters reset. Reloading full dataset...');
   loadTransactions();
 }
 
@@ -240,10 +178,6 @@ document.getElementById('searchInput').addEventListener('input', applyFilters);
 document.getElementById('dateFrom').addEventListener('change', applyFilters);
 document.getElementById('dateTo').addEventListener('change', applyFilters);
 
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
 
 function showToast(title, msg, type = 's') {
   const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };
@@ -256,15 +190,14 @@ function showToast(title, msg, type = 's') {
 }
 
 async function loadTransactions() {
-  console.log('[loadTransactions] Fetching all transactions from backend...');
   try {
     const res = await fetch(`${API}/transactions`);
+    if (!res.ok) throw new Error('Server error');
     allTransactions = await res.json();
-    console.log('[loadTransactions] Loaded', allTransactions.length, 'records');
     computeSummary();
     applyFilters();
   } catch {
-    showToast('Error', 'Failed to load transactions.', 'e');
+    showToast('Error', 'Failed to load transactions. Is the server running?', 'e');
   }
 }
 

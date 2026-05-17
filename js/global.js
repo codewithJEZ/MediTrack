@@ -34,7 +34,7 @@ function setupLogout() {
   if (!logoutBtn) return;
   logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('user');
-    window.location.href = location.origin + '/frontend/index.html';
+    window.location.href = location.origin + '/index.html';
   });
 }
 

@@ -75,11 +75,11 @@ async function saveUser() {
   const res = await fetch(`${API}/users`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, username, password: '123456', role })
+    body: JSON.stringify({ name, username, password: 'meditrack@2026', role })
   });
   if (res.ok) {
     closeAddModal();
-    showToast('User Added', `${name} has been added. Default password: 123456`, 's');
+    showToast('User Added', `${name} has been added. Default password: meditrack@2026`, 's');
     loadUsers();
   } else {
     const err = await res.json();

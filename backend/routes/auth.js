@@ -1,14 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const bcrypt = require('bcryptjs');
-
-function verifyPassword(input, stored) {
-  if (stored && stored.startsWith('$2')) {
-    return bcrypt.compareSync(input, stored);
-  }
-  return input === stored;
-}
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
@@ -19,7 +11,7 @@ router.post('/login', (req, res) => {
 
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
-  if (!user || !verifyPassword(password, user.password)) {
+  if (!user || user.password !== password) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
 
@@ -42,12 +34,11 @@ router.post('/change-password', (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  if (!verifyPassword(currentPassword, user.password)) {
+  if (user.password !== currentPassword) {
     return res.status(401).json({ error: 'Current password is incorrect' });
   }
 
-  const hashed = bcrypt.hashSync(newPassword, 10);
-  db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, userId);
+  db.prepare('UPDATE users SET password = ? WHERE id = ?').run(newPassword, userId);
 
   res.json({ updated: true });
 });

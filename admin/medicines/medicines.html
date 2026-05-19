@@ -346,11 +346,7 @@
         <button class="btn-secondary-mt" id="btnManageCategories" onclick="openCategoriesModal()">
           <i class="bi bi-tags-fill"></i> Categories
         </button>
-        <button class="btn-secondary-mt" id="btnRestockCart" onclick="openRestockCart()" style="position:relative;">
-          <i class="bi bi-cart3"></i> Stock Request Cart
-          <span id="restockCartBadge" style="display:none;position:absolute;top:-7px;right:-7px;background:var(--maroon);color:#fff;border-radius:50%;min-width:20px;height:20px;font-size:.68rem;font-weight:800;align-items:center;justify-content:center;padding:0 3px;">0</span>
-        </button>
-        <button class="btn-primary-mt" id="btnAddMedicine">
+<button class="btn-primary-mt" id="btnAddMedicine">
           <i class="bi bi-plus-lg"></i> Add Medicine
         </button>
       </div>
@@ -427,28 +423,6 @@
 
 <div class="toast-stack" id="toastStack"></div>
 
-<!-- RESTOCK CART MODAL -->
-<div class="mt-modal-overlay" id="restockCartModal">
-  <div class="mt-modal" style="max-width:640px;overflow-y:auto;max-height:90vh;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <h2><i class="bi bi-cart3" style="color:#16a34a;margin-right:8px;"></i>Stock Request Cart</h2>
-      <button class="view-med-close" onclick="closeRestockCart()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
-    </div>
-    <p class="modal-sub" id="restockCartSub">No items queued yet.</p>
-
-    <div id="restockCartEmpty" style="text-align:center;padding:32px 0;color:var(--text-3);">
-      <i class="bi bi-cart-x" style="font-size:2.2rem;display:block;margin-bottom:8px;"></i>
-      <p style="font-size:.88rem;margin:0;">No medicines in cart. Click <strong>Add to Cart</strong> on any medicine row.</p>
-    </div>
-
-    <div id="restockCartList" style="display:none;flex-direction:column;gap:8px;margin-bottom:16px;max-height:360px;overflow-y:auto;padding-right:2px;"></div>
-
-    <div id="restockCartActions" class="modal-actions" style="flex-wrap:wrap;gap:8px;margin-top:8px;">
-      <button type="button" class="btn-modal-cancel" onclick="closeRestockCart()">Close</button>
-      <button type="button" id="cartRisBtn" class="btn-modal-confirm" style="background:linear-gradient(135deg,#1d4ed8,#2563eb);box-shadow:0 4px 14px rgba(37,99,235,.28);" onclick="submitRequest()"><i class="bi bi-file-earmark-text"></i> Submit Request</button>
-    </div>
-  </div>
-</div>
 
 <!-- DELETE CONFIRMATION MODAL -->
 <div class="mt-modal-overlay" id="deleteModal">

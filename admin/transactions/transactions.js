@@ -1,4 +1,3 @@
-const API = 'http://localhost:3000/api';
 const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 let allTransactions = [];
 let activeFilter = 'All';
@@ -136,7 +135,6 @@ function handleDeleteTransaction(id) {
     showToast('Error', 'Invalid transaction ID. Cannot delete.', 'e');
     return;
   }
-  console.log('[Delete] Opening modal for transaction ID:', numId);
   pendingDeleteTxId = numId;
   document.getElementById('deleteTxModal').classList.add('show');
 }
@@ -152,14 +150,12 @@ async function confirmDeleteTransaction() {
     return;
   }
   const id = pendingDeleteTxId;
-  console.log('[Delete] Confirming delete for transaction ID:', id);
   closeDeleteTxModal();
   try {
     const res = await fetch(`${API}/transactions/${id}`, {
       method: 'DELETE',
-      headers: { 'x-user-id': String(storedUser?.id || '') }
+      headers: { 'Content-Type': 'application/json', 'x-user-id': String(storedUser?.id || '') }
     });
-    console.log('[Delete] Response status:', res.status);
     if (res.ok) {
       showToast('Deleted', 'Transaction has been removed successfully.', 's');
       await loadTransactions();
@@ -195,7 +191,6 @@ function applyFilters() {
   const toVal    = document.getElementById('dateTo').value;
   const fromDate = fromVal ? new Date(fromVal + 'T00:00:00') : null;
   const toDate   = toVal   ? new Date(toVal + 'T23:59:59') : null;
-  console.log('[applyFilters] fromDate:', fromDate, '| toDate:', toDate);
 
   const data = allTransactions.filter(t => {
     const med       = (t.medicine_name  || '').toLowerCase();
@@ -205,18 +200,15 @@ function applyFilters() {
     const illness   = (t.illness        || '').toLowerCase();
     const performer = (t.performed_by   || '').toLowerCase();
     const txDate    = t.created_at ? new Date(t.created_at.replace(' ', 'T')) : null;
-    console.log('[applyFilters] txDate:', txDate, '| raw:', t.created_at);
     return (activeFilter === 'All' || (t.type || '').toUpperCase() === activeFilter) &&
            (!q || med.includes(q) || patient.includes(q) || course.includes(q) || section.includes(q) || illness.includes(q) || performer.includes(q)) &&
            (!fromDate || (txDate && txDate >= fromDate)) &&
            (!toDate   || (txDate && txDate <= toDate));
   });
-  console.log('[applyFilters] filtered results length:', data.length);
   renderTx(data);
 }
 
 function clearDateFilter() {
-  console.log('[clearDateFilter] Resetting all filters...');
   document.getElementById('searchInput').value = '';
   document.getElementById('dateFrom').value    = '';
   document.getElementById('dateTo').value      = '';
@@ -224,7 +216,6 @@ function clearDateFilter() {
   document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
   const allTab = document.querySelector('.filter-tab[data-filter="All"]');
   if (allTab) allTab.classList.add('active');
-  console.log('[clearDateFilter] All filters reset. Reloading full dataset...');
   loadTransactions();
 }
 
@@ -256,11 +247,9 @@ function showToast(title, msg, type = 's') {
 }
 
 async function loadTransactions() {
-  console.log('[loadTransactions] Fetching all transactions from backend...');
   try {
     const res = await fetch(`${API}/transactions`);
     allTransactions = await res.json();
-    console.log('[loadTransactions] Loaded', allTransactions.length, 'records');
     computeSummary();
     applyFilters();
   } catch {

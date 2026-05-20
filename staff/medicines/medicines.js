@@ -1,10 +1,6 @@
-const API = 'http://localhost:3000/api';
+const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
 let allMedicines = [];
 let categoryMap  = {};
-
-// Auth
-const storedUser = JSON.parse(localStorage.getItem('user'));
-if (!storedUser || storedUser.role !== 'staff') window.location.href = '../../index.html';
 
 // ── Status helpers ──────────────────────────────────────────────────────────
 
@@ -310,6 +306,9 @@ async function dispenseMedicine() {
 
 loadMedicines();
 updateCartBadge();
+
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('sidebarOverlay');
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {

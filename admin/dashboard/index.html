@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user || user.role !== 'admin') window.location.href = '../../index.html';</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="MediTrack — Clinic Inventory Management System" />
   <title>MediTrack | Admin Dashboard</title>
 
@@ -27,6 +26,8 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="../main.css">
+  <script src="../../js/auth.js"></script>
+  <script>checkAuth('admin', '../../index.html');</script>
 </head>
 
 <body>
@@ -369,7 +370,7 @@
       <div class="card-panel">
         <div class="tbl-header">
           <h3><i class="bi bi-clock-history" style="color:var(--maroon);margin-right:7px;"></i>Recent Transactions</h3>
-          <a href="#" class="btn-see-all" id="btnViewAllTransactions">View All <i class="bi bi-arrow-right"></i></a>
+          <a href="../transactions/transactions.html" class="btn-see-all" id="btnViewAllTransactions">View All <i class="bi bi-arrow-right"></i></a>
         </div>
         <div class="table-responsive">
           <table class="medi-table" aria-label="Recent Transactions Table">
@@ -398,10 +399,11 @@
         <div id="alertList" role="list" aria-label="Low Stock Alerts">
           <!-- Populated by JS -->
         </div>
-        <button class="btn-reorder" id="btnRequestReorder" aria-label="Request Reorder for all low stock items">
-          <i class="bi bi-truck"></i>
-          Request Reorder
-        </button>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light);">
+          <a href="../medicines/medicines.html" class="btn-see-all" style="width:100%;justify-content:center;">
+            View in Medicines <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
       </div>
 
     </div>
@@ -422,6 +424,7 @@
 <!-- Bootstrap 5 JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
+<script src="../../js/config.js"></script>
 <script src="../../js/global.js"></script>
 
 
@@ -444,7 +447,6 @@ const storedUser = storedAdmin ? (storedAdmin.username || storedAdmin.name || 'U
 document.getElementById('welcomeHeading').textContent = `Welcome back, ${storedUser} 👋`;
 document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-const API = 'http://localhost:3000/api';
 let lowStock = [];
 
 Chart.defaults.font.family = "'Nunito', sans-serif";
@@ -591,8 +593,8 @@ Object.entries(nav).forEach(([id, href]) => {
 const cardNav = {
   cardTotalMedicines:    '../medicines/medicines.html',
   cardTotalTransactions: '../transactions/transactions.html',
-  cardLowStock:          '../reports/reports.html',
-  cardExpiringSoon:      '../reports/reports.html',
+  cardLowStock:          '../medicines/medicines.html',
+  cardExpiringSoon:      '../medicines/medicines.html',
 };
 Object.entries(cardNav).forEach(([id, href]) => {
   const el = document.getElementById(id);
@@ -601,20 +603,6 @@ Object.entries(cardNav).forEach(([id, href]) => {
   el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.location.href = href; } });
 });
 
-document.getElementById('btnRequestReorder')?.addEventListener('click', () => {
-  const cart = JSON.parse(localStorage.getItem('requestCart') || '[]');
-  lowStock.forEach(m => {
-    const existing = cart.find(item => item.id === m.id);
-    if (existing) {
-      existing.qty += 1;
-    } else {
-      cart.push({ id: m.id, name: m.name, unit: m.unit || '', qty: 1, note: '' });
-    }
-  });
-  console.log('[RequestReorder] cart updated:', cart);
-  localStorage.setItem('requestCart', JSON.stringify(cart));
-  window.location.href = '../medicines/medicines.html';
-});
 </script>
 
 </body>

@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user || user.role !== 'admin') window.location.href = '../../index.html';</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTrack | Settings</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
@@ -110,6 +109,8 @@
       .settings-grid { grid-template-columns: 1fr; }
     }
   </style>
+  <script src="../../js/auth.js"></script>
+  <script>checkAuth('admin', '../../index.html');</script>
 </head>
 <body>
 
@@ -258,6 +259,7 @@
 
 <div class="toast-stack" id="toastStack"></div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/config.js"></script>
 <script src="../../js/global.js"></script>
 <script>
 function showToast(title, msg, type = 's') {
@@ -275,56 +277,22 @@ const overlayEl = document.getElementById('sidebarOverlay');
 document.getElementById('menuToggle').addEventListener('click', () => { sidebarEl.classList.toggle('open'); overlayEl.classList.toggle('show'); });
 overlayEl.addEventListener('click', () => { sidebarEl.classList.remove('open'); overlayEl.classList.remove('show'); });
 
-const storedU = JSON.parse(localStorage.getItem('user') || 'null');
-if (storedU) {
-  const displayName = storedU.name || storedU.username || 'Admin';
-  document.getElementById('profileDisplayName').textContent = displayName;
-  document.getElementById('profileAvatarLg').textContent    = displayName.charAt(0).toUpperCase();
-  document.getElementById('inputDisplayName').value         = displayName;
-  document.getElementById('inputUsername').value            = storedU.username || '';
-  document.getElementById('profileJoined').textContent =
-    'Member since ' + new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
-}
+// Profile display
+const storedUser = JSON.parse(localStorage.getItem('user') || 'null');
+const displayName = storedUser ? (storedUser.name || storedUser.username || 'Admin') : 'Admin';
+const avatarLetter = displayName.charAt(0).toUpperCase();
+document.getElementById('profileDisplayName').textContent = displayName;
+document.getElementById('profileAvatarLg').textContent    = avatarLetter;
+document.getElementById('inputDisplayName').value         = displayName;
+document.getElementById('profileJoined').textContent =
+  'Member since ' + new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
 
 document.getElementById('btnSaveProfile').addEventListener('click', () => {
-  const name = document.getElementById('inputDisplayName').value.trim();
-  if (!name) { showToast('Error', 'Display name cannot be empty.', 'e'); return; }
-  const u = JSON.parse(localStorage.getItem('user') || 'null');
-  if (u) {
-    u.name = name;
-    localStorage.setItem('user', JSON.stringify(u));
-    loadUserInfo(u);
-    document.getElementById('profileDisplayName').textContent = name;
-    document.getElementById('profileAvatarLg').textContent    = name.charAt(0).toUpperCase();
-  }
   showToast('Profile Saved', 'Your display name has been updated.', 's');
 });
 
-document.getElementById('btnChangePassword').addEventListener('click', async () => {
-  const current = document.getElementById('inputCurrentPw').value;
-  const newPw   = document.getElementById('inputNewPw').value;
-  const confirm = document.getElementById('inputConfirmPw').value;
-  if (!current)          { showToast('Error', 'Please enter your current password.', 'e'); return; }
-  if (!newPw)            { showToast('Error', 'Please enter a new password.', 'e'); return; }
-  if (newPw.length < 4)  { showToast('Error', 'New password must be at least 4 characters.', 'e'); return; }
-  if (newPw !== confirm)  { showToast('Error', 'Passwords do not match.', 'e'); return; }
-  const sessionUser = JSON.parse(localStorage.getItem('user') || 'null');
-  if (!sessionUser) { showToast('Error', 'Session expired. Please log in again.', 'e'); return; }
-  try {
-    const res = await fetch('http://localhost:3000/api/auth/change-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: sessionUser.id, currentPassword: current, newPassword: newPw })
-    });
-    const data = await res.json();
-    if (!res.ok) { showToast('Error', data.error || 'Failed to change password.', 'e'); return; }
-    document.getElementById('inputCurrentPw').value = '';
-    document.getElementById('inputNewPw').value     = '';
-    document.getElementById('inputConfirmPw').value = '';
-    showToast('Password Updated', 'Your password has been changed successfully.', 's');
-  } catch {
-    showToast('Error', 'Network error. Please try again.', 'e');
-  }
+document.getElementById('btnChangePassword').addEventListener('click', () => {
+  showToast('Info', 'Password management is handled via the Users module.', 'w');
 });
 </script>
 </body>

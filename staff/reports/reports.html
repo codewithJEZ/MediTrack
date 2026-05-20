@@ -2,11 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user || user.role !== 'staff') window.location.href = '../../index.html';
-  </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTrack | Reports</title>
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
@@ -97,6 +93,8 @@
       .report-summary { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <script src="../../js/auth.js"></script>
+  <script>checkAuth('staff', '../../index.html');</script>
 </head>
 <body>
 
@@ -143,38 +141,38 @@
 
     <div class="section-row au d1" style="margin-bottom:22px;">
       <div>
-        <div class="sec-title">Inventory Reports</div>
+        <div class="sec-title">My Reports</div>
         <div class="sec-sub" id="reportSubtitle">Loading…</div>
       </div>
     </div>
 
     <div class="report-summary au d2">
       <div class="rpt-card rpt-card--blue">
-        <div class="rpt-card-icon"><i class="bi bi-capsule-pill"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-arrow-left-right"></i></div>
         <div class="rpt-card-body">
-          <small>Total Medicines</small>
-          <h2 id="rptTotalMeds">—</h2>
+          <small>My Transactions</small>
+          <h2 id="rptMyTxn">—</h2>
         </div>
       </div>
       <div class="rpt-card rpt-card--green">
-        <div class="rpt-card-icon"><i class="bi bi-arrow-left-right"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-clipboard2-check"></i></div>
         <div class="rpt-card-body">
-          <small>Total Transactions</small>
-          <h2 id="rptTotalTxn">—</h2>
+          <small>My Requests</small>
+          <h2 id="rptMyReq">—</h2>
         </div>
       </div>
       <div class="rpt-card rpt-card--orange">
-        <div class="rpt-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-check-circle-fill"></i></div>
         <div class="rpt-card-body">
-          <small>Low Stock Items</small>
-          <h2 id="rptLowStock">—</h2>
+          <small>My Approved Requests</small>
+          <h2 id="rptMyApproved">—</h2>
         </div>
       </div>
       <div class="rpt-card rpt-card--red">
-        <div class="rpt-card-icon"><i class="bi bi-clock-fill"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-box-arrow-right"></i></div>
         <div class="rpt-card-body">
-          <small>Expiring Soon</small>
-          <h2 id="rptExpiring">—</h2>
+          <small>My Dispensed Medicines</small>
+          <h2 id="rptMyDispensed">—</h2>
         </div>
       </div>
     </div>
@@ -183,8 +181,8 @@
       <div class="card-panel chart-card">
         <div class="chart-header">
           <div>
-            <h3 class="chart-title">Monthly Usage</h3>
-            <p class="chart-sub">Dispensed vs Restocked — past 6 months</p>
+            <h3 class="chart-title">My Monthly Activity</h3>
+            <p class="chart-sub">My dispensed vs restocked — past 6 months</p>
           </div>
           <div class="chart-legend">
             <span class="leg-item"><span class="leg-dot" style="background:#7B1D1E;"></span>Dispensed</span>
@@ -201,8 +199,8 @@
       <div class="card-panel chart-card">
         <div class="chart-header">
           <div>
-            <h3 class="chart-title">Current Stock Levels</h3>
-            <p class="chart-sub">Top medicines by quantity on hand</p>
+            <h3 class="chart-title">My Medicine Usage</h3>
+            <p class="chart-sub">Top medicines I dispensed</p>
           </div>
         </div>
         <div class="chart-wrap" style="height:280px;">
@@ -212,8 +210,8 @@
       <div class="card-panel chart-card">
         <div class="chart-header">
           <div>
-            <h3 class="chart-title">Stock by Category</h3>
-            <p class="chart-sub">Breakdown by medicine type</p>
+            <h3 class="chart-title">My Request Activity</h3>
+            <p class="chart-sub">My requests by status</p>
           </div>
         </div>
         <div class="chart-wrap" style="height:200px;">
@@ -235,13 +233,14 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script src="../sidebar.js"></script>
+<script src="../../js/config.js"></script>
 <script src="../../js/global.js"></script>
 <script>
-const API = 'http://localhost:3000/api';
-
-// Dynamic subtitle
 document.getElementById('reportSubtitle').textContent =
-  'Overview for ' + new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+  'My Activity for ' + new Date().toLocaleDateString('en-PH', { month: 'long', year: 'numeric' });
+
+const sidebarEl = document.getElementById('sidebar');
+const overlayEl = document.getElementById('sidebarOverlay');
 
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -250,17 +249,16 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Charts
 Chart.defaults.font.family = "'Nunito', sans-serif";
 Chart.defaults.color = '#8d93b0';
 
 const usageChart = new Chart(document.getElementById('usageChart'), {
   type: 'bar',
   data: {
-    labels: ['January','February','March','April','May','June'],
+    labels: [],
     datasets: [
-      { label:'Dispensed', data:[0,0,0,0,0,0], backgroundColor:'#7B1D1E', borderRadius:6, barPercentage:.55 },
-      { label:'Restocked', data:[0,0,0,0,0,0], backgroundColor:'#F6AC02', borderRadius:6, barPercentage:.55 }
+      { label:'Dispensed', data:[], backgroundColor:'#7B1D1E', borderRadius:6, barPercentage:.55 },
+      { label:'Restocked', data:[], backgroundColor:'#F6AC02', borderRadius:6, barPercentage:.55 }
     ]
   },
   options: {
@@ -268,7 +266,7 @@ const usageChart = new Chart(document.getElementById('usageChart'), {
     plugins: { legend: { display: false } },
     scales: {
       x: { grid: { display: false }, border: { display: false } },
-      y: { grid: { color: '#eef0f6' }, border: { display: false }, ticks: { stepSize: 20 } }
+      y: { grid: { color: '#eef0f6' }, border: { display: false }, ticks: { stepSize: 1 } }
     }
   }
 });
@@ -295,66 +293,87 @@ const catDonut = new Chart(document.getElementById('categoryDonut'), {
 const COLORS = ['#7B1D1E','#dc2626','#16a34a','#2563eb','#ea580c','#F6AC02','#8d93b0','#7c3aed'];
 
 async function loadReports() {
+  const loggedUser = JSON.parse(localStorage.getItem('user') || 'null');
+  const uid = loggedUser?.id || 0;
+  const uname = encodeURIComponent(loggedUser?.name || '');
+  const qs = `user_id=${uid}&user_name=${uname}`;
+
   try {
-    const [summaryRes, monthlyRes, medsRes, catsRes] = await Promise.all([
-      fetch(`${API}/reports/summary`),
-      fetch(`${API}/reports/monthly`),
-      fetch(`${API}/medicines`),
-      fetch(`${API}/categories`)
-    ]);
+    const summaryRes = await fetch(`${API}/reports/personal-summary?${qs}`);
+    if (summaryRes.ok) {
+      const summary = await summaryRes.json();
+      document.getElementById('rptMyTxn').textContent      = summary.myTransactions  ?? 0;
+      document.getElementById('rptMyReq').textContent       = summary.myRequests      ?? 0;
+      document.getElementById('rptMyApproved').textContent  = summary.myApproved      ?? 0;
+      document.getElementById('rptMyDispensed').textContent = summary.myDispensed     ?? 0;
+    } else {
+      ['rptMyTxn','rptMyReq','rptMyApproved','rptMyDispensed'].forEach(id => {
+        document.getElementById(id).textContent = 0;
+      });
+    }
+  } catch (_) {
+    ['rptMyTxn','rptMyReq','rptMyApproved','rptMyDispensed'].forEach(id => {
+      document.getElementById(id).textContent = 0;
+    });
+  }
 
-    const summary = await summaryRes.json();
-    const monthly = await monthlyRes.json();
-    const meds    = await medsRes.json();
-    const cats    = await catsRes.json();
-
-    document.getElementById('rptTotalMeds').textContent = summary.totalMedicines;
-    document.getElementById('rptTotalTxn').textContent  = summary.totalTransactions;
-    document.getElementById('rptLowStock').textContent  = summary.lowStock;
-    document.getElementById('rptExpiring').textContent  = summary.expiringSoon;
-
+  try {
+    const monthlyRes = await fetch(`${API}/reports/personal-monthly?${qs}`);
+    const monthly    = monthlyRes.ok ? await monthlyRes.json() : [];
+    const now = new Date();
+    const labels   = [];
+    const monthMap = {};
+    for (let i = 5; i >= 0; i--) {
+      const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      labels.push(d.toLocaleDateString('en-PH', { month: 'short', year: '2-digit' }));
+      monthMap[key] = labels.length - 1;
+    }
     const dispensedData = new Array(6).fill(0);
     const restockedData = new Array(6).fill(0);
-    monthly.forEach(row => {
-      const idx = parseInt(row.month.split('-')[1]) - 1;
-      if (idx >= 0 && idx < 6) {
-        dispensedData[idx] = row.stock_out;
-        restockedData[idx] = row.stock_in;
+    (Array.isArray(monthly) ? monthly : []).forEach(row => {
+      const idx = monthMap[row.month];
+      if (idx !== undefined) {
+        dispensedData[idx] = Number(row.stock_out) || 0;
+        restockedData[idx] = Number(row.stock_in)  || 0;
       }
     });
+    usageChart.data.labels = labels;
     usageChart.data.datasets[0].data = dispensedData;
     usageChart.data.datasets[1].data = restockedData;
     usageChart.update();
+  } catch (_) {}
 
-    const top8 = [...meds].sort((a,b) => b.quantity - a.quantity).slice(0, 8);
-    stockChart.data.labels = top8.map(m => m.name);
-    stockChart.data.datasets[0].data = top8.map(m => m.quantity);
-    stockChart.data.datasets[0].backgroundColor = top8.map((_, i) => COLORS[i % COLORS.length]);
+  try {
+    const medsRes = await fetch(`${API}/reports/personal-medicines?${qs}`);
+    const meds    = medsRes.ok ? await medsRes.json() : [];
+    const medList = Array.isArray(meds) ? meds : [];
+    stockChart.data.labels = medList.map(m => m.name);
+    stockChart.data.datasets[0].data = medList.map(m => Number(m.total_dispensed) || 0);
+    stockChart.data.datasets[0].backgroundColor = medList.map((_, i) => COLORS[i % COLORS.length]);
     stockChart.update();
+  } catch (_) {}
 
-    const catMap = {};
-    cats.forEach(c => { catMap[c.id] = c.name; });
-    const catCount = {};
-    meds.forEach(m => {
-      const name = catMap[m.category_id] || 'Unknown';
-      catCount[name] = (catCount[name] || 0) + 1;
-    });
-    const catEntries = Object.entries(catCount).map(([label, count], i) => ({
-      label, count, color: COLORS[i % COLORS.length]
+  try {
+    const risRes     = await fetch(`${API}/reports/personal-ris-status?${qs}`);
+    const risRows    = risRes.ok ? await risRes.json() : [];
+    const statusEntries = (Array.isArray(risRows) ? risRows : []).map((r, i) => ({
+      label: String(r.status).charAt(0).toUpperCase() + String(r.status).slice(1),
+      count: Number(r.count) || 0,
+      color: COLORS[i % COLORS.length]
     }));
-    catDonut.data.labels = catEntries.map(c => c.label);
-    catDonut.data.datasets[0].data = catEntries.map(c => c.count);
-    catDonut.data.datasets[0].backgroundColor = catEntries.map(c => c.color);
+    catDonut.data.labels = statusEntries.map(c => c.label);
+    catDonut.data.datasets[0].data = statusEntries.map(c => c.count);
+    catDonut.data.datasets[0].backgroundColor = statusEntries.map(c => c.color);
     catDonut.update();
-    document.getElementById('donutList').innerHTML = catEntries.map(c =>
-      `<div class="donut-row">
-        <div class="donut-left"><div class="donut-dot" style="background:${c.color};"></div><span class="donut-lbl">${c.label}</span></div>
-        <span class="donut-val">${c.count}</span>
-      </div>`
-    ).join('');
-  } catch (err) {
-    console.error('Reports load error:', err);
-  }
+    document.getElementById('donutList').innerHTML = statusEntries.length
+      ? statusEntries.map(c =>
+          `<div class="donut-row">
+            <div class="donut-left"><div class="donut-dot" style="background:${c.color};"></div><span class="donut-lbl">${c.label}</span></div>
+            <span class="donut-val">${c.count}</span>
+          </div>`).join('')
+      : '<div class="donut-row"><span class="donut-lbl" style="color:var(--text-3);">No requests yet</span></div>';
+  } catch (_) {}
 }
 
 loadReports();

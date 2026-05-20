@@ -1,4 +1,3 @@
-const API = 'http://localhost:3000/api';
 let allTransactions = [];
 let activeFilter = 'All';
 

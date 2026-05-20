@@ -24,6 +24,8 @@ try { db.exec(`
 try { db.exec(`ALTER TABLE ris_items ADD COLUMN unit TEXT`); } catch (_) {}
 try { db.exec(`ALTER TABLE ris_items ADD COLUMN note TEXT`); } catch (_) {}
 try { db.exec(`ALTER TABLE ris_requests ADD COLUMN reject_reason TEXT`); } catch (_) {}
+try { db.exec(`ALTER TABLE ris_requests ADD COLUMN user_id INTEGER REFERENCES users(id)`); } catch (_) {}
+try { db.exec(`UPDATE ris_requests SET user_id = (SELECT id FROM users WHERE users.name = ris_requests.requested_by) WHERE user_id IS NULL`); } catch (_) {}
 
 // Migrate old status values to standardized names
 try { db.exec(`UPDATE ris_requests SET status = 'approved'  WHERE status = 'approved_for_purchase'`); } catch (_) {}
@@ -40,10 +42,12 @@ router.post('/', (req, res) => {
     }
   }
   try {
+    const userRow = db.prepare('SELECT id FROM users WHERE name = ?').get(requested_by);
+    const risUserId = userRow ? userRow.id : null;
     const result = db.transaction(() => {
       const ris = db.prepare(
-        `INSERT INTO ris_requests (requested_by, status) VALUES (?, 'pending')`
-      ).run(requested_by);
+        `INSERT INTO ris_requests (requested_by, status, user_id) VALUES (?, 'pending', ?)`
+      ).run(requested_by, risUserId);
       const risId = ris.lastInsertRowid;
       const insertItem = db.prepare(
         `INSERT INTO ris_items (ris_id, medicine_id, quantity, unit, note) VALUES (?, ?, ?, ?, ?)`

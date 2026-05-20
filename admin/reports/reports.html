@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <script>const user = JSON.parse(localStorage.getItem('user')); if (!user || user.role !== 'admin') window.location.href = '../../index.html';</script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTrack | Reports</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" crossorigin="anonymous" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
@@ -107,17 +106,6 @@
       color: var(--text-1); margin: 0 0 3px;
     }
     .chart-sub { font-size: .78rem; color: var(--text-3); margin: 0; }
-    .btn-add-cart {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 14px;
-      background: #2563eb; color: #fff;
-      border: none; border-radius: 8px;
-      font-size: .78rem; font-weight: 700;
-      font-family: 'Nunito', sans-serif;
-      cursor: pointer; transition: background .18s, transform .15s;
-    }
-    .btn-add-cart:hover { background: #1d4ed8; transform: translateY(-1px); }
-
     @media (max-width: 1100px) {
       .report-summary { grid-template-columns: repeat(2, 1fr); }
       .charts-2col    { grid-template-columns: 1fr; }
@@ -131,13 +119,14 @@
     @media print {
       .sidebar, .sidebar-overlay,
       .top-navbar, .page-toolbar,
-      .toast-stack, .btn-add-cart,
-      #risModal { display: none !important; }
+      .toast-stack { display: none !important; }
       .app { display: block; }
       .main-content { margin: 0 !important; padding: 16px !important; }
       .card-panel, .chart-card { box-shadow: none !important; break-inside: avoid; }
     }
   </style>
+  <script src="../../js/auth.js"></script>
+  <script>checkAuth('admin', '../../index.html');</script>
 </head>
 <body>
 
@@ -230,19 +219,22 @@
         <button class="btn-export" id="btnFilter" style="padding:9px 18px;">
           <i class="bi bi-funnel-fill"></i> Filter
         </button>
+        <button class="btn-export" id="btnClear" style="padding:9px 18px;background:linear-gradient(135deg,#6b7280,#9ca3af);box-shadow:0 4px 14px rgba(107,114,128,.25);color:#fff;">
+          <i class="bi bi-x-circle"></i> Clear
+        </button>
       </div>
-      <button class="btn-export" id="btnExport" onclick="printReport()" style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 4px 14px rgba(22,163,74,.3);">
-        <i class="bi bi-printer"></i> Export Report
+      <button class="btn-export" id="btnExport" onclick="exportReportPDF()" style="background:linear-gradient(135deg,#16a34a,#22c55e);box-shadow:0 4px 14px rgba(22,163,74,.3);">
+        <i class="bi bi-file-earmark-pdf"></i> Export PDF
       </button>
     </div>
 
     <!-- Summary Strip -->
     <div class="report-summary au d2">
       <div class="rpt-card rpt-card--blue">
-        <div class="rpt-card-icon"><i class="bi bi-capsule-pill"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-box-arrow-in-down"></i></div>
         <div class="rpt-card-body">
-          <small>Total Medicines</small>
-          <h2 id="rptTotalMeds">—</h2>
+          <small>Total Stock In</small>
+          <h2 id="rptStockIn">—</h2>
         </div>
       </div>
       <div class="rpt-card rpt-card--green">
@@ -253,17 +245,17 @@
         </div>
       </div>
       <div class="rpt-card rpt-card--orange">
-        <div class="rpt-card-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-box-arrow-up"></i></div>
         <div class="rpt-card-body">
-          <small>Low Stock Items</small>
-          <h2 id="rptLowStock">—</h2>
+          <small>Total Stock Out</small>
+          <h2 id="rptStockOut">—</h2>
         </div>
       </div>
       <div class="rpt-card rpt-card--red">
-        <div class="rpt-card-icon"><i class="bi bi-clock-fill"></i></div>
+        <div class="rpt-card-icon"><i class="bi bi-file-earmark-check-fill"></i></div>
         <div class="rpt-card-body">
-          <small>Expiring Soon</small>
-          <h2 id="rptExpiring">—</h2>
+          <small>Approved RIS</small>
+          <h2 id="rptApprovedRIS">—</h2>
         </div>
       </div>
     </div>
@@ -290,12 +282,12 @@
     <!-- Bottom 2-col: stock levels + donut -->
     <div class="charts-2col au d4">
 
-      <!-- Stock Levels Bar -->
+      <!-- Top Dispensed Medicines -->
       <div class="card-panel chart-card">
         <div class="chart-header">
           <div>
-            <h3 class="chart-title">Current Stock Levels</h3>
-            <p class="chart-sub">Top medicines by quantity on hand</p>
+            <h3 class="chart-title">Top Dispensed Medicines</h3>
+            <p class="chart-sub">Top 5 medicines by total dispensed</p>
           </div>
         </div>
         <div class="chart-wrap" style="height:280px;">
@@ -319,56 +311,27 @@
 
     </div>
 
-    <!-- Low Stock — RIS -->
-    <div class="charts-1col au d5">
+    <!-- Transaction Report Export -->
+    <div class="charts-1col au">
       <div class="card-panel chart-card">
         <div class="chart-header">
           <div>
-            <h3 class="chart-title"><i class="bi bi-exclamation-triangle-fill" style="color:#ea580c;margin-right:6px;font-size:.95rem;"></i>Low Stock Items</h3>
-            <p class="chart-sub">Medicines with quantity ≤ 10</p>
+            <h3 class="chart-title"><i class="bi bi-receipt" style="color:#7B1D1E;margin-right:6px;font-size:.95rem;"></i>Transaction Report</h3>
+            <p class="chart-sub">Export all transactions within a date range as a PDF report</p>
           </div>
         </div>
-        <div class="table-responsive">
-          <table class="medi-table" id="lowStockTable" style="font-size:.85rem;">
-            <thead>
-              <tr>
-                <th>Medicine</th>
-                <th>Category</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="lowStockBody">
-              <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:28px 0;">No low-stock items.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Expiring Soon -->
-    <div class="charts-1col au d6">
-      <div class="card-panel chart-card">
-        <div class="chart-header">
-          <div>
-            <h3 class="chart-title"><i class="bi bi-clock-fill" style="color:#dc2626;margin-right:6px;font-size:.95rem;"></i>Expiring Soon</h3>
-            <p class="chart-sub">Medicines expiring within 30 days</p>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:2px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label style="font-size:.82rem;font-weight:700;color:var(--text-3);white-space:nowrap;">From</label>
+            <input type="date" id="txnFrom" style="border:1.5px solid var(--border-light);border-radius:8px;padding:7px 10px;font-size:.85rem;font-family:'Nunito',sans-serif;background:var(--surface);color:var(--text-1);outline:none;" />
           </div>
-        </div>
-        <div class="table-responsive">
-          <table class="medi-table" id="expiringTable" style="font-size:.85rem;">
-            <thead>
-              <tr>
-                <th>Medicine</th>
-                <th>Expiration Date</th>
-                <th>Days Left</th>
-              </tr>
-            </thead>
-            <tbody id="expiringBody">
-              <tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:28px 0;">No expiring items.</td></tr>
-            </tbody>
-          </table>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <label style="font-size:.82rem;font-weight:700;color:var(--text-3);white-space:nowrap;">To</label>
+            <input type="date" id="txnTo" style="border:1.5px solid var(--border-light);border-radius:8px;padding:7px 10px;font-size:.85rem;font-family:'Nunito',sans-serif;background:var(--surface);color:var(--text-1);outline:none;" />
+          </div>
+          <button class="btn-export" onclick="exportTransactionPDF()" style="background:linear-gradient(135deg,#7B1D1E,#b91c1c);box-shadow:0 4px 14px rgba(123,29,30,.28);color:#fff;">
+            <i class="bi bi-file-earmark-pdf"></i> Export Transaction Report
+          </button>
         </div>
       </div>
     </div>
@@ -378,684 +341,9 @@
 
 <div class="toast-stack" id="toastStack"></div>
 
-<!-- RIS MODAL -->
-<div class="mt-modal-overlay" id="risModal" style="display:none;position:fixed;inset:0;background:rgba(10,10,20,.55);backdrop-filter:blur(4px);z-index:2000;align-items:center;justify-content:center;">
-  <div style="background:var(--surface,#fff);border-radius:16px;padding:32px 28px;width:100%;max-width:460px;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);animation:fadeUp .3s cubic-bezier(.34,1.2,.64,1);">
-    <h2 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:1.12rem;font-weight:800;color:var(--text-1,#111);margin-bottom:4px;">
-      <i class="bi bi-file-earmark-text" style="color:#1d4ed8;margin-right:8px;"></i>Generate RIS
-    </h2>
-    <p style="font-size:.82rem;color:var(--text-3,#888);margin-bottom:18px;">Review stock details and confirm quantity for the requisition slip.</p>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">
-      <div style="background:var(--bg,#f7f7fa);border:1.5px solid var(--border-light,#e8e8f0);border-radius:10px;padding:11px 13px;min-width:0;">
-        <div style="font-size:.68rem;font-weight:800;color:var(--text-3,#888);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Medicine</div>
-        <div id="risMedName" style="font-size:.85rem;font-weight:700;color:var(--text-1,#111);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
-      </div>
-      <div style="background:var(--bg,#f7f7fa);border:1.5px solid var(--border-light,#e8e8f0);border-radius:10px;padding:11px 13px;min-width:0;">
-        <div style="font-size:.68rem;font-weight:800;color:var(--text-3,#888);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Current Stock</div>
-        <div id="risCurrent" style="font-size:.85rem;font-weight:700;color:var(--text-1,#111);">—</div>
-      </div>
-      <div style="background:rgba(37,99,235,.06);border:1.5px solid rgba(37,99,235,.2);border-radius:10px;padding:11px 13px;min-width:0;">
-        <div style="font-size:.68rem;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Suggested</div>
-        <div id="risSuggested" style="font-size:.85rem;font-weight:700;color:#1d4ed8;">—</div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:14px;">
-      <label style="display:block;font-size:.82rem;font-weight:700;color:var(--text-2,#555);margin-bottom:5px;">Quantity to Request</label>
-      <input type="number" id="risQtyInput" min="1"
-        style="width:100%;padding:12px 14px;border:1.5px solid var(--border,#ddd);border-radius:10px;font-size:.92rem;font-family:'Nunito',sans-serif;outline:none;transition:border-color .2s;"
-        placeholder="Enter quantity…"
-        onfocus="this.style.borderColor='#7b1d1e';this.style.boxShadow='0 0 0 3px rgba(123,29,30,.12)';"
-        onblur="this.style.borderColor='';this.style.boxShadow='';" />
-      <p id="risQtyError" style="display:none;font-size:.78rem;color:#c0392b;margin-top:4px;font-weight:700;">Please enter a quantity greater than 0.</p>
-    </div>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button type="button" onclick="closeRisModal()"
-        style="flex:1;padding:12px;background:var(--bg,#f7f7fa);color:var(--text-2,#555);border:1.5px solid var(--border,#ddd);border-radius:10px;font-size:.9rem;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;">
-        Cancel
-      </button>
-      <button type="button" id="risConfirmBtn" onclick="confirmRIS()"
-        style="flex:2;padding:12px;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,.28);">
-        <i class="bi bi-file-earmark-text"></i> Generate RIS
-      </button>
-    </div>
-  </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="../../js/config.js"></script>
 <script src="../../js/global.js"></script>
-<script>
-const API = 'http://localhost:3000/api';
-
-Chart.defaults.font.family = "'Nunito', sans-serif";
-Chart.defaults.color = '#8d93b0';
-
-const usageChart = new Chart(document.getElementById('usageChart'), {
-  type: 'bar',
-  data: {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-    datasets: [
-      { label: 'Dispensed', data: [0,0,0,0,0,0], backgroundColor: '#7B1D1E', borderRadius: 6, barPercentage: .55 },
-      { label: 'Restocked', data: [0,0,0,0,0,0], backgroundColor: '#F6AC02', borderRadius: 6, barPercentage: .55 }
-    ]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { display: false }, border: { display: false } },
-      y: { grid: { color: '#eef0f6' }, border: { display: false }, ticks: { stepSize: 20 } }
-    }
-  }
-});
-
-const stockChart = new Chart(document.getElementById('stockChart'), {
-  type: 'bar',
-  data: { labels: [], datasets: [{ label: 'Qty', data: [], backgroundColor: [], borderRadius: 5, barPercentage: .65 }] },
-  options: {
-    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { color: '#eef0f6' }, border: { display: false } },
-      y: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 12 } } }
-    }
-  }
-});
-
-const catDonut = new Chart(document.getElementById('categoryDonut'), {
-  type: 'doughnut',
-  data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderWidth: 0, hoverOffset: 6 }] },
-  options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } }
-});
-
-const COLORS = ['#7B1D1E','#dc2626','#16a34a','#2563eb','#ea580c','#F6AC02','#8d93b0','#7c3aed'];
-
-let _reportSnapshot = { meds: [], summary: {}, fromDate: null, toDate: null };
-
-async function loadReports(fromDate, toDate) {
-  const [summaryRes, monthlyRes, lowStockRes, medsRes, catsRes] = await Promise.all([
-    fetch(`${API}/reports/summary`),
-    fetch(`${API}/reports/monthly`),
-    fetch(`${API}/reports/low-stock`),
-    fetch(`${API}/medicines`),
-    fetch(`${API}/categories`)
-  ]);
-
-  const summary      = await summaryRes.json();
-  const monthly      = await monthlyRes.json();
-  const lowStockMeds = await lowStockRes.json();
-  const meds         = await medsRes.json();
-  const cats         = await catsRes.json();
-
-  if (fromDate || toDate) {
-    const label = fromDate && toDate ? `${fromDate} — ${toDate}` : fromDate ? `From ${fromDate}` : `Until ${toDate}`;
-    document.getElementById('rptSubLabel').textContent = label;
-  } else {
-    document.getElementById('rptSubLabel').textContent = 'All transactions';
-  }
-
-  _reportSnapshot = { meds, summary, fromDate: fromDate || null, toDate: toDate || null };
-
-  document.getElementById('rptTotalMeds').textContent = summary.totalMedicines;
-  document.getElementById('rptTotalTxn').textContent  = summary.totalTransactions;
-  document.getElementById('rptLowStock').textContent  = summary.lowStock;
-  document.getElementById('rptExpiring').textContent  = summary.expiringSoon;
-
-  const dispensedData = new Array(6).fill(0);
-  const restockedData = new Array(6).fill(0);
-  monthly.forEach(row => {
-    const idx = parseInt(row.month.split('-')[1]) - 1;
-    if (idx >= 0 && idx < 6) {
-      dispensedData[idx] = row.stock_out;
-      restockedData[idx] = row.stock_in;
-    }
-  });
-  usageChart.data.datasets[0].data = dispensedData;
-  usageChart.data.datasets[1].data = restockedData;
-  usageChart.update();
-
-  const top8 = [...meds].sort((a,b) => b.quantity - a.quantity).slice(0, 8);
-  stockChart.data.labels = top8.map(m => m.name);
-  stockChart.data.datasets[0].data = top8.map(m => m.quantity);
-  stockChart.data.datasets[0].backgroundColor = top8.map((_, i) => COLORS[i % COLORS.length]);
-  stockChart.update();
-
-  const catMap = {};
-  cats.forEach(c => { catMap[c.id] = c.name; });
-  const catCount = {};
-  meds.forEach(m => {
-    const name = catMap[m.category_id] || 'Unknown';
-    catCount[name] = (catCount[name] || 0) + 1;
-  });
-  const catEntries = Object.entries(catCount).map(([label, count], i) => ({ label, count, color: COLORS[i % COLORS.length] }));
-  catDonut.data.labels = catEntries.map(c => c.label);
-  catDonut.data.datasets[0].data = catEntries.map(c => c.count);
-  catDonut.data.datasets[0].backgroundColor = catEntries.map(c => c.color);
-  catDonut.update();
-  document.getElementById('donutList').innerHTML = catEntries.map(c =>
-    `<div class="donut-row">
-      <div class="donut-left"><div class="donut-dot" style="background:${c.color};"></div><span class="donut-lbl">${c.label}</span></div>
-      <span class="donut-val">${c.count}</span>
-    </div>`
-  ).join('');
-
-  const lowBody = document.getElementById('lowStockBody');
-  if (!lowStockMeds.length) {
-    lowBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:28px 0;">No low-stock items.</td></tr>`;
-  } else {
-    lowBody.innerHTML = lowStockMeds.map(m =>
-      `<tr>
-        <td><div class="td-medicine"><div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>${m.name}</div></td>
-        <td style="color:var(--text-2);">${m.category_name || '—'}</td>
-        <td><span style="color:#ea580c;font-weight:800;">${m.quantity}</span></td>
-        <td style="color:var(--text-3);">${m.unit || '—'}</td>
-        <td><button class="btn-add-cart" onclick="addToCart(${m.id})"><i class="bi bi-plus-lg"></i> Add to Request</button></td>
-      </tr>`
-    ).join('');
-  }
-
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const expiring = meds
-    .filter(m => m.expiration_date)
-    .map(m => {
-      const exp = new Date(m.expiration_date); exp.setHours(0, 0, 0, 0);
-      const daysLeft = Math.ceil((exp - today) / 86400000);
-      return { ...m, daysLeft };
-    })
-    .filter(m => m.daysLeft <= 30)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
-
-  const expBody = document.getElementById('expiringBody');
-  if (!expiring.length) {
-    expBody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--text-3);padding:28px 0;">No expiring items.</td></tr>`;
-  } else {
-    expBody.innerHTML = expiring.map(m => {
-      const urgent = m.daysLeft < 7;
-      const expStr = new Date(m.expiration_date).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
-      const daysLabel = m.daysLeft < 0 ? 'Expired' : m.daysLeft === 0 ? 'Today' : `${m.daysLeft}d`;
-      return `<tr${urgent ? ' style="background:rgba(220,38,38,.04);"' : ''}>
-        <td><div class="td-medicine"><div class="med-icon-sm"><i class="bi bi-capsule-pill"></i></div>${m.name}</div></td>
-        <td style="color:var(--text-2);">${expStr}</td>
-        <td><span style="font-weight:800;color:${urgent ? '#dc2626' : '#ea580c'};">${daysLabel}</span>${urgent ? ' <i class="bi bi-exclamation-circle-fill" style="color:#dc2626;font-size:.75rem;"></i>' : ''}</td>
-      </tr>`;
-    }).join('');
-  }
-}
-
-function triggerRIS(id) {
-  const m = _reportSnapshot.meds.find(x => x.id === id);
-  if (m) generateRIS(m);
-}
-
-function addToCart(id) {
-  const medicine = _reportSnapshot.meds.find(x => x.id === id);
-  if (!medicine) return;
-  let cart = JSON.parse(localStorage.getItem('requestCart')) || [];
-  const existing = cart.find(item => item.id === medicine.id);
-  if (existing) {
-    existing.qty += 1;
-  } else {
-    cart.push({ id: medicine.id, name: medicine.name, unit: medicine.unit || '', qty: 1, note: '' });
-  }
-  localStorage.setItem('requestCart', JSON.stringify(cart));
-  showToast('Added to Request', `${medicine.name} added to your request list.`, 's');
-}
-
-loadReports();
-
-document.getElementById('btnFilter').addEventListener('click', () => {
-  const from = document.getElementById('filterFrom').value;
-  const to   = document.getElementById('filterTo').value;
-  loadReports(from || null, to || null);
-});
-
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('sidebarOverlay');
-document.getElementById('menuToggle').addEventListener('click', () => { sidebar.classList.toggle('open'); overlay.classList.toggle('show'); });
-overlay.addEventListener('click', () => { sidebar.classList.remove('open'); overlay.classList.remove('show'); });
-
-function printReport() { window.print(); }
-
-
-function exportReportPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const { meds, summary, fromDate, toDate } = _reportSnapshot;
-
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 40;
-  let y = 50;
-
-  const MAROON = [123, 29, 30];
-  const YELLOW = [246, 172, 2];
-  const GRAY   = [141, 147, 176];
-
-  // Header bar
-  doc.setFillColor(...MAROON);
-  doc.rect(0, 0, pageW, 36, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text('MediTrack — Clinic Inventory Report', margin, 24);
-
-  // Date range
-  y = 56;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...GRAY);
-  const rangeLabel = fromDate && toDate ? `${fromDate} — ${toDate}`
-                   : fromDate ? `From ${fromDate}`
-                   : toDate   ? `Until ${toDate}`
-                   : 'All transactions';
-  doc.text(`Date range: ${rangeLabel}`, margin, y);
-  doc.text(`Generated: ${new Date().toLocaleString()}`, pageW - margin, y, { align: 'right' });
-
-  // Section: Summary
-  y += 22;
-  doc.setFillColor(...YELLOW);
-  doc.rect(margin, y, pageW - margin * 2, 1.5, 'F');
-  y += 12;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...MAROON);
-  doc.text('Summary', margin, y);
-
-  y += 14;
-  const summaryItems = [
-    ['Total Medicines',      summary.totalMedicines    ?? 0],
-    ['Total Transactions',   summary.totalTransactions ?? 0],
-    ['Low Stock Items',      summary.lowStock          ?? 0],
-    ['Expiring Soon (≤30d)', summary.expiringSoon      ?? 0],
-  ];
-  const colW = (pageW - margin * 2) / 4;
-  summaryItems.forEach(([label, val], i) => {
-    const x = margin + i * colW;
-    doc.setFillColor(248, 248, 252);
-    doc.roundedRect(x, y, colW - 8, 44, 4, 4, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(18);
-    doc.setTextColor(...MAROON);
-    doc.text(String(val), x + (colW - 8) / 2, y + 20, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY);
-    doc.text(label.toUpperCase(), x + (colW - 8) / 2, y + 34, { align: 'center' });
-  });
-
-  // Section: Medicine Inventory Table
-  y += 62;
-  doc.setFillColor(...YELLOW);
-  doc.rect(margin, y, pageW - margin * 2, 1.5, 'F');
-  y += 12;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...MAROON);
-  doc.text('Medicine Inventory', margin, y);
-
-  y += 10;
-  const cols = ['#', 'Medicine Name', 'Category', 'Quantity', 'Expiration'];
-  const colWidths = [24, 190, 120, 70, 100];
-  const rowH = 18;
-
-  // Table header
-  doc.setFillColor(...MAROON);
-  doc.rect(margin, y, pageW - margin * 2, rowH, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(255, 255, 255);
-  let cx = margin + 6;
-  cols.forEach((c, i) => { doc.text(c, cx, y + 12); cx += colWidths[i]; });
-
-  y += rowH;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  meds.forEach((m, idx) => {
-    if (y > 760) { doc.addPage(); y = 40; }
-    doc.setFillColor(idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 252);
-    doc.rect(margin, y, pageW - margin * 2, rowH, 'F');
-    doc.setTextColor(50, 50, 60);
-    cx = margin + 6;
-    const expStr = m.expiration_date ? new Date(m.expiration_date).toLocaleDateString() : '—';
-    [String(idx + 1), m.name || '—', m.category_name || '—', String(m.quantity ?? 0), expStr].forEach((cell, i) => {
-      doc.text(String(cell).substring(0, 28), cx, y + 12);
-      cx += colWidths[i];
-    });
-    y += rowH;
-  });
-
-  // Section: Low Stock Items
-  y += 16;
-  if (y > 720) { doc.addPage(); y = 40; }
-  const ORANGE = [234, 88, 12];
-  doc.setFillColor(...ORANGE);
-  doc.rect(margin, y, pageW - margin * 2, 1.5, 'F');
-  y += 12;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...MAROON);
-  doc.text('Low Stock Items', margin, y);
-
-  y += 10;
-  const lowStockMeds = meds.filter(m => m.quantity <= 10);
-  if (!lowStockMeds.length) {
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(9);
-    doc.setTextColor(...GRAY);
-    doc.text('No low-stock items.', margin, y + 10);
-    y += 24;
-  } else {
-    const lsCols   = ['#', 'Medicine Name', 'Quantity', 'Unit'];
-    const lsWidths = [24, 300, 80, 100];
-    const lsRowH   = 18;
-
-    doc.setFillColor(...ORANGE);
-    doc.rect(margin, y, pageW - margin * 2, lsRowH, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(255, 255, 255);
-    let lsCx = margin + 6;
-    lsCols.forEach((c, i) => { doc.text(c, lsCx, y + 12); lsCx += lsWidths[i]; });
-
-    y += lsRowH;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    lowStockMeds.forEach((m, idx) => {
-      if (y > 760) { doc.addPage(); y = 40; }
-      doc.setFillColor(idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 252);
-      doc.rect(margin, y, pageW - margin * 2, lsRowH, 'F');
-      doc.setTextColor(50, 50, 60);
-      lsCx = margin + 6;
-      [String(idx + 1), m.name || '—', String(m.quantity ?? 0), m.unit || '—'].forEach((cell, i) => {
-        doc.text(String(cell).substring(0, 38), lsCx, y + 12);
-        lsCx += lsWidths[i];
-      });
-      y += lsRowH;
-    });
-  }
-
-  // Section: Expiring Soon
-  y += 16;
-  if (y > 720) { doc.addPage(); y = 40; }
-  const RED2 = [220, 38, 38];
-  const todayPdf = new Date(); todayPdf.setHours(0, 0, 0, 0);
-  const expiringMeds = meds
-    .filter(m => m.expiration_date)
-    .map(m => {
-      const exp = new Date(m.expiration_date); exp.setHours(0, 0, 0, 0);
-      return { ...m, daysLeft: Math.ceil((exp - todayPdf) / 86400000) };
-    })
-    .filter(m => m.daysLeft <= 30)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
-
-  doc.setFillColor(...RED2);
-  doc.rect(margin, y, pageW - margin * 2, 1.5, 'F');
-  y += 12;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(...MAROON);
-  doc.text('Expiring Soon', margin, y);
-
-  y += 10;
-  if (!expiringMeds.length) {
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(9);
-    doc.setTextColor(...GRAY);
-    doc.text('No medicines expiring within 30 days.', margin, y + 10);
-    y += 24;
-  } else {
-    const expCols   = ['#', 'Medicine Name', 'Expiration Date', 'Days Left'];
-    const expWidths = [24, 240, 130, 110];
-    const expRowH   = 18;
-
-    doc.setFillColor(...RED2);
-    doc.rect(margin, y, pageW - margin * 2, expRowH, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
-    doc.setTextColor(255, 255, 255);
-    let expCx = margin + 6;
-    expCols.forEach((c, i) => { doc.text(c, expCx, y + 12); expCx += expWidths[i]; });
-
-    y += expRowH;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    expiringMeds.forEach((m, idx) => {
-      if (y > 760) { doc.addPage(); y = 40; }
-      doc.setFillColor(idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 248, idx % 2 === 0 ? 255 : 252);
-      doc.rect(margin, y, pageW - margin * 2, expRowH, 'F');
-      doc.setTextColor(m.daysLeft < 7 ? 192 : 50, m.daysLeft < 7 ? 57 : 50, m.daysLeft < 7 ? 43 : 60);
-      expCx = margin + 6;
-      const expDateStr  = new Date(m.expiration_date).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
-      const daysLabel   = m.daysLeft < 0 ? 'Expired' : m.daysLeft === 0 ? 'Today' : `${m.daysLeft}d`;
-      [String(idx + 1), m.name || '—', expDateStr, daysLabel].forEach((cell, i) => {
-        doc.text(String(cell).substring(0, 32), expCx, y + 12);
-        expCx += expWidths[i];
-      });
-      y += expRowH;
-    });
-  }
-
-  doc.save('report.pdf');
-  showToast('Export Successful', 'report.pdf has been downloaded.', 's');
-}
-
-let _risMed = null;
-
-function generateRIS(medJson) {
-  _risMed = typeof medJson === 'string' ? JSON.parse(medJson) : medJson;
-  const suggested = Math.max(0, 100 - (_risMed.quantity || 0));
-
-  document.getElementById('risMedName').textContent  = _risMed.name;
-  document.getElementById('risCurrent').textContent  = `${_risMed.quantity} ${_risMed.unit || ''}`;
-  document.getElementById('risSuggested').textContent = `${suggested} ${_risMed.unit || ''}`;
-  document.getElementById('risQtyInput').value        = suggested > 0 ? suggested : '';
-  document.getElementById('risQtyError').style.display = 'none';
-
-  const modal = document.getElementById('risModal');
-  modal.style.display = 'flex';
-  modal.onclick = e => { if (e.target === modal) closeRisModal(); };
-}
-
-function closeRisModal() {
-  document.getElementById('risModal').style.display = 'none';
-  _risMed = null;
-}
-
-function confirmRIS() {
-  const qtyRaw = document.getElementById('risQtyInput').value;
-  const qty    = parseInt(qtyRaw, 10);
-  const errEl  = document.getElementById('risQtyError');
-  if (!qtyRaw || isNaN(qty) || qty <= 0) {
-    errEl.style.display = 'block';
-    document.getElementById('risQtyInput').style.borderColor = '#c0392b';
-    return;
-  }
-  errEl.style.display = 'none';
-  document.getElementById('risQtyInput').style.borderColor = '';
-  const m = _risMed;
-  closeRisModal();
-  _doRISPdf(m, qty);
-}
-
-function _doRISPdf(m, qty) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const pageW = doc.internal.pageSize.getWidth();
-  const M = 50;
-  const MAROON = [123, 29, 30];
-  const YELLOW = [246, 172, 2];
-  const GRAY   = [100, 100, 110];
-
-  const now      = new Date();
-  const dateStr  = now.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-  const user     = JSON.parse(localStorage.getItem('user') || 'null');
-  const requester = user ? (user.name || 'Admin') : 'Admin';
-
-  // Header bar
-  doc.setFillColor(...MAROON);
-  doc.rect(0, 0, pageW, 42, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(17);
-  doc.setTextColor(255, 255, 255);
-  doc.text('MediTrack Clinic', pageW / 2, 20, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text('Inventory Management System', pageW / 2, 34, { align: 'center' });
-
-  // Title
-  let y = 72;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.setTextColor(...MAROON);
-  doc.text('REQUISITION AND ISSUE SLIP', pageW / 2, y, { align: 'center' });
-  y += 4;
-  doc.setDrawColor(...YELLOW);
-  doc.setLineWidth(2);
-  doc.line(M, y, pageW - M, y);
-
-  // Metadata
-  y += 20;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(...GRAY);
-  const risNo = `RIS-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${m.id}`;
-  doc.text(`RIS No.:  ${risNo}`, M, y);
-  doc.text(`Date:  ${dateStr}`, pageW - M, y, { align: 'right' });
-  y += 16;
-  doc.text(`Requested by:  ${requester}`, M, y);
-  doc.text(`Purpose:  Restock`, pageW - M, y, { align: 'right' });
-
-  // Divider
-  y += 20;
-  doc.setDrawColor(220, 220, 228);
-  doc.setLineWidth(1);
-  doc.line(M, y, pageW - M, y);
-
-  // Item table
-  y += 18;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...MAROON);
-  doc.text('ITEM DETAILS', M, y);
-  y += 10;
-
-  const cols   = ['Item #', 'Medicine Name', 'Qty Requested', 'Unit', 'Remarks'];
-  const widths = [44, 210, 100, 80, 120];
-  const rowH   = 22;
-
-  doc.setFillColor(...MAROON);
-  doc.rect(M, y, pageW - M * 2, rowH, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(255, 255, 255);
-  let cx = M + 6;
-  cols.forEach((c, i) => { doc.text(c, cx, y + 14); cx += widths[i]; });
-
-  y += rowH;
-  doc.setFillColor(248, 248, 252);
-  doc.rect(M, y, pageW - M * 2, rowH, 'F');
-  doc.setDrawColor(220, 220, 228);
-  doc.setLineWidth(0.5);
-  doc.rect(M, y, pageW - M * 2, rowH);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9.5);
-  doc.setTextColor(40, 40, 50);
-  cx = M + 6;
-  ['1', m.name, String(qty), m.unit || '—', ''].forEach((cell, i) => {
-    doc.text(String(cell).substring(0, 30), cx, y + 14); cx += widths[i];
-  });
-
-  y += rowH + 10;
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(8.5);
-  doc.setTextColor(...GRAY);
-  doc.text(`Current stock on hand:  ${m.quantity} ${m.unit || ''}`, M, y);
-
-  // Divider
-  y += 24;
-  doc.setDrawColor(220, 220, 228);
-  doc.setLineWidth(1);
-  doc.line(M, y, pageW - M, y);
-
-  // Signature blocks
-  y += 28;
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(...MAROON);
-  doc.text('SIGNATURES', M, y);
-  y += 18;
-
-  const sigW = (pageW - M * 2 - 20) / 3;
-  [['Requested by:', requester], ['Approved by:', ''], ['Issued by:', '']].forEach(([lbl, name], i) => {
-    const sx = M + i * (sigW + 10);
-    doc.setFillColor(248, 248, 252);
-    doc.roundedRect(sx, y, sigW, 70, 4, 4, 'F');
-    doc.setDrawColor(220, 220, 228);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(sx, y, sigW, 70, 4, 4);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...MAROON);
-    doc.text(lbl, sx + 10, y + 14);
-    if (name) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9.5);
-      doc.setTextColor(40, 40, 50);
-      doc.text(name, sx + sigW / 2, y + 36, { align: 'center' });
-    }
-    doc.setDrawColor(...MAROON);
-    doc.setLineWidth(0.8);
-    doc.line(sx + 10, y + 50, sx + sigW - 10, y + 50);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY);
-    doc.text('Signature over printed name', sx + sigW / 2, y + 62, { align: 'center' });
-  });
-
-  // Received by
-  y += 86;
-  const recW = (pageW - M * 2 - 10) / 2;
-  ['Received by:', 'Date Received:'].forEach((lbl, i) => {
-    const sx = M + i * (recW + 10);
-    doc.setFillColor(248, 248, 252);
-    doc.roundedRect(sx, y, recW, 52, 4, 4, 'F');
-    doc.setDrawColor(220, 220, 228);
-    doc.setLineWidth(0.5);
-    doc.roundedRect(sx, y, recW, 52, 4, 4);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(...MAROON);
-    doc.text(lbl, sx + 10, y + 14);
-    doc.setDrawColor(...MAROON);
-    doc.setLineWidth(0.8);
-    doc.line(sx + 10, y + 38, sx + recW - 10, y + 38);
-  });
-
-  // Footer
-  y += 70;
-  doc.setDrawColor(...YELLOW);
-  doc.setLineWidth(1.5);
-  doc.line(M, y, pageW - M, y);
-  y += 12;
-  doc.setFont('helvetica', 'italic');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...GRAY);
-  doc.text('This document is computer-generated and is valid without a physical signature unless otherwise required.', pageW / 2, y, { align: 'center' });
-
-  doc.save(`RIS_${m.name.replace(/\s+/g, '_')}.pdf`);
-  showToast('RIS Generated', `Requisition slip for ${m.name} downloaded.`, 's');
-}
-
-function showToast(title, msg, type = 's') {
-  const icons = { s: 'bi-check-circle-fill', w: 'bi-exclamation-circle-fill', e: 'bi-x-circle-fill' };
-  const stack = document.getElementById('toastStack');
-  const el = document.createElement('div');
-  el.className = 'toast-item';
-  el.innerHTML = `<div class="toast-ico ${type}"><i class="bi ${icons[type]}"></i></div><div class="toast-body"><strong>${title}</strong><p>${msg}</p></div><button class="toast-close" onclick="this.closest('.toast-item').remove()"><i class="bi bi-x"></i></button>`;
-  stack.appendChild(el);
-  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 4000);
-}
-</script>
+<script src="reports.js"></script>
 </body>
 </html>

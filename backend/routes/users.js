@@ -36,8 +36,14 @@ router.put('/:id', (req, res) => {
 });
 
 router.post('/:id/reset-password', (req, res) => {
-  const result = db.prepare('UPDATE users SET password = ? WHERE id = ?').run('123456', req.params.id);
-  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+  const id = Number(req.params.id);
+  if (!id || isNaN(id)) return res.status(400).json({ error: 'Invalid ID' });
+  const result = db.prepare('UPDATE users SET password = ? WHERE id = ?').run('meditrack@2026', id);
+  if (result.changes === 0) return res.status(404).json({ error: 'User not found' });
+  const verify = db.prepare('SELECT password FROM users WHERE id = ?').get(id);
+  if (!verify || verify.password !== 'meditrack@2026') {
+    return res.status(500).json({ error: 'Password update failed to persist' });
+  }
   res.json({ reset: true });
 });
 

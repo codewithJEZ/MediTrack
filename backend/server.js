@@ -14,11 +14,12 @@ const settingsRouter = require('./routes/settings');
 const risRouter = require('./routes/ris');
 const reportsRouter = require('./routes/reports');
 
+app.use('/api/auth', authRouter);
+
 app.get('/', (req, res) => {
   res.json({ message: 'MediTrack API running' });
 });
 
-app.use('/api/auth', authRouter);
 app.use('/api/medicines', medicinesRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/transactions', transactionsRouter);
@@ -31,6 +32,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal Server Error' });
 });
 
-app.listen(3000, () => {
-  console.log('Server running on port 3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

@@ -1,5 +1,3 @@
-const API = 'http://localhost:3000/api';
-
 const pwInput  = document.getElementById('password');
 const pwToggle = document.getElementById('pwToggle');
 const eyeIcon  = document.getElementById('eyeIcon');

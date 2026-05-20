@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require('../db');
 
 try { db.exec('ALTER TABLE transactions ADD COLUMN user_id INTEGER REFERENCES users(id)'); } catch (_) {}
+try { db.exec('ALTER TABLE transactions ADD COLUMN performed_by_name TEXT'); } catch (_) {}
+try { db.exec('UPDATE transactions SET performed_by_name = (SELECT name FROM users WHERE users.id = transactions.user_id) WHERE user_id IS NOT NULL AND performed_by_name IS NULL'); } catch (_) {}
 
 const recentRequests = new Map();
 const DEDUP_WINDOW_MS = 5000;
@@ -29,7 +31,13 @@ const TX_SELECT = `
 
 router.get('/', (req, res) => {
   try {
-    const rows = db.prepare(`${TX_SELECT} ORDER BY t.id ASC`).all();
+    const conditions = [];
+    const params     = [];
+    if (req.query.user_id) { conditions.push(`t.user_id = ?`);             params.push(Number(req.query.user_id)); }
+    if (req.query.from)    { conditions.push(`date(t.created_at) >= ?`);   params.push(req.query.from); }
+    if (req.query.to)      { conditions.push(`date(t.created_at) <= ?`);   params.push(req.query.to);   }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const rows = db.prepare(`${TX_SELECT} ${where} ORDER BY t.id ASC`).all(...params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch transactions.' });
@@ -107,12 +115,15 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: `Insufficient stock. Only ${medicine.quantity} available.` });
     }
 
+    const userRow = uid ? db.prepare('SELECT name FROM users WHERE id = ?').get(uid) : null;
+    const pByName = userRow ? userRow.name : null;
+
     const insert = db.transaction(() => {
       const result = db.prepare(`
         INSERT INTO transactions
-          (medicine_id, type, quantity, notes, patient_name, course, section, illness, user_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(medicine_id, type, qty, notes ? String(notes).trim() : null, pName, pCourse, pSec, pIll, uid);
+          (medicine_id, type, quantity, notes, patient_name, course, section, illness, user_id, performed_by_name)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(medicine_id, type, qty, notes ? String(notes).trim() : null, pName, pCourse, pSec, pIll, uid, pByName);
       db.prepare('UPDATE medicines SET quantity = ? WHERE id = ?').run(newQty, medicine_id);
       return result;
     });
@@ -134,7 +145,6 @@ router.delete('/:id', (req, res) => {
   if (!requester || requester.role !== 'admin') {
     return res.status(403).json({ error: 'Only administrators can delete transactions.' });
   }
-
   try {
     const tx = db.prepare('SELECT id, medicine_id, type, quantity FROM transactions WHERE id = ?').get(req.params.id);
     if (!tx) return res.status(404).json({ error: 'Transaction not found.' });

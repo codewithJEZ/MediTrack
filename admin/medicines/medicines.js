@@ -1,4 +1,3 @@
-const API = 'http://localhost:3000/api';
 const sessionUser = JSON.parse(localStorage.getItem('user') || 'null');
 
 let allMedicines = [];

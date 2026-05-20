@@ -1,4 +1,3 @@
-const API = 'http://localhost:3000/api';
 const sessionUser = JSON.parse(localStorage.getItem('user') || 'null');
 
 let allRIS = [];
@@ -131,6 +130,9 @@ async function loadRIS() {
     showToast('Error', 'Failed to load RIS requests.', 'e');
   }
   applyFilters();
+  if (window.setRisBadgeCount) {
+    window.setRisBadgeCount(allRIS.filter(r => r.status === 'pending').length);
+  }
 }
 
 document.getElementById('searchInput').addEventListener('input', applyFilters);
@@ -598,3 +600,7 @@ document.addEventListener('keydown', e => {
 // ── Init ──────────────────────────────────────────────────────
 
 loadRIS();
+
+if (!window._risBadgeInterval) {
+  window._risBadgeInterval = setInterval(loadRIS, 10000);
+}

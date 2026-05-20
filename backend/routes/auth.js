@@ -4,43 +4,14 @@ const db = require('../db');
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
-
   if (!username || !password) {
-    return res.status(400).json({ error: 'Missing credentials' });
+    return res.status(400).json({ error: 'Username and password are required.' });
   }
-
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-
-  if (!user || user.password !== password) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-
-  res.json({
-    id: user.id,
-    name: user.name,
-    role: user.role
-  });
-});
-
-router.post('/change-password', (req, res) => {
-  const { userId, currentPassword, newPassword } = req.body;
-
-  if (!userId || !currentPassword || !newPassword) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  const user = db.prepare('SELECT id, name, username, role FROM users WHERE username = ? AND password = ?').get(username, password);
   if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+    return res.status(401).json({ error: 'Invalid username or password.' });
   }
-
-  if (user.password !== currentPassword) {
-    return res.status(401).json({ error: 'Current password is incorrect' });
-  }
-
-  db.prepare('UPDATE users SET password = ? WHERE id = ?').run(newPassword, userId);
-
-  res.json({ updated: true });
+  res.json({ id: user.id, name: user.name, username: user.username, role: user.role });
 });
 
 module.exports = router;

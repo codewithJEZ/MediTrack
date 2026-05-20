@@ -1,4 +1,3 @@
-const API = 'http://localhost:3000/api';
 const AVATAR_COLORS = ['#7B1D1E','#2563eb','#16a34a','#ea580c','#7c3aed','#0891b2'];
 let USERS = [];
 let editUserId = null;
@@ -102,7 +101,6 @@ function closeEditModal() {
 
 async function updateUser() {
   const id = Number(editUserId);
-  console.log('[updateUser] editUserId:', editUserId, '-> id:', id);
   if (!id || isNaN(id)) { showToast('Error', 'Invalid user ID.', 'e'); return; }
   const name     = document.getElementById('editUserName').value.trim();
   const username = document.getElementById('editUserUsername').value.trim();
@@ -123,10 +121,17 @@ async function updateUser() {
   }
 }
 
-async function resetPassword() {
+function resetPassword() {
+  document.getElementById('resetPasswordModal').classList.add('show');
+}
+function closeResetModal() {
+  document.getElementById('resetPasswordModal').classList.remove('show');
+}
+async function doResetPassword() {
+  closeResetModal();
   const res = await fetch(`${API}/users/${editUserId}/reset-password`, { method: 'POST' });
   if (res.ok) {
-    showToast('Password Reset', 'Password has been reset to 123456.', 's');
+    showToast('Password Reset', 'Password has been reset to meditrack@2026.', 's');
   } else {
     showToast('Error', 'Failed to reset password.', 'e');
   }
@@ -175,7 +180,6 @@ function showToast(title, msg, type = 's') {
 async function loadUsers() {
   const res = await fetch(`${API}/users`, { cache: 'no-store' });
   USERS = await res.json();
-  console.log(`[loadUsers] Fetched ${USERS.length} users:`, USERS.map(u => u.id));
   applyFilters();
 }
 
